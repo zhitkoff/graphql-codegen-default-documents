@@ -45,6 +45,10 @@ export class DocumentsGeneratorVisitor {
   scalars: ParsedScalarsMap;
   interfaceImplementationsMap: { [objectName: string]: InterfaceName[] };
   interfaceFieldsMap: { [interfaceName: string]: string[] };
+  ignoredQueriesMap: { [name: string]: boolean };
+  ignoredMutationsMap: { [name: string]: boolean };
+  ignoredSubscriptionsMap: { [name: string]: boolean };
+  ignoredFragmentsMap: { [name: string]: boolean };
 
   constructor(
     schema: GraphQLSchema,
@@ -58,6 +62,10 @@ export class DocumentsGeneratorVisitor {
     this.typeDefsMap = {};
     this.interfaceFieldsMap = {};
     this.interfaceImplementationsMap = {};
+    this.ignoredQueriesMap = {};
+    this.ignoredMutationsMap = {};
+    this.ignoredSubscriptionsMap = {};
+    this.ignoredFragmentsMap = {};
     autoBind(this as any);
   }
 
@@ -94,66 +102,68 @@ export class DocumentsGeneratorVisitor {
     );
   }
 
-  generateDocuments(ignore: {queries: string[]; mutations: string[]; subscriptions: string[]; fragments: string[]}): string {
+  generateDocuments(ignore: { queries: string[]; mutations: string[]; subscriptions: string[]; fragments: string[] }): string {
     this.validateInterfaces();
- 
-    const ignoredQueriesMap: { [name: string]: true } = {};
-    const ignoredMutationsMap: { [name: string]: true } = {};
-    const ignoredSubscriptionsMap: { [name: string]: true } = {};
-    const ignoredFragmentsMap: { [name: string]: true } = {};
+    this.buildIgnoredMaps(ignore);
 
-    ignore.queries.forEach(
-      (query) => (ignoredQueriesMap[query] = true)
-    );
-    ignore.mutations.forEach(
-      (mutation) => (ignoredMutationsMap[mutation] = true)
-    );
-    ignore.subscriptions.forEach(
-      (subscription) =>
-        (ignoredSubscriptionsMap[subscription] = true)
-    );
-    ignore.fragments.forEach(
-      (fragment) => (ignoredFragmentsMap[fragment] = true)
-    );
-
-    // const operationsMap: { key: string; operationType: OperationTypeNode }[] = [
-    //   { key: "Query", OperationTypeNode.QUERY },
-    //   { key: "Mutation", operationType: "mutation" },
-    //   { key: "Subscription", operationType: "subscription" },
-    // ];
-    
-    const generatedCode = docsSettings.map((setting) => {
-      const operations = this.typeDefsMap[setting.key];
-      if (!operations) {
+    const generatedCode = this.docsToGenerate.map((doc) => {
+      let generateFrom: FieldType[];
+      let generateKind: { kind: string; operationType?: OperationTypeNode };
+      switch (doc) {
+        case "fragments":
+          generateFrom = this.typeDefsMap['Fragment'];
+          generateKind = { kind: "fragment" };
+          break;
+        case "queries":
+          generateFrom = this.typeDefsMap['Query'];
+          generateKind = { kind: "operation", operationType: OperationTypeNode.QUERY };
+          break;
+        case "mutations":
+          generateFrom = this.typeDefsMap['Mutation'];
+          generateKind = { kind: "operation", operationType: OperationTypeNode.MUTATION };
+          break;
+        case "subscriptions":
+          generateFrom = this.typeDefsMap['Subscription'];
+          generateKind = { kind: "operation", operationType: OperationTypeNode.SUBSCRIPTION };
+          break;
+      }
+      if (!generateFrom) {
         return "";
       }
-      return this.generate(operations, setting.operationType);
+      return this.generate(generateFrom, generateKind);
     });
+
     return generatedCode.join("\n\n\n");
   }
 
   private generate = (
-    operations: FieldType[],
-    operationType: OperationTypeNode
+    generateFrom: FieldType[],
+    generateKind: { kind: string; operationType?: OperationTypeNode }
   ) => {
-    const filteredOperations = (() => {
-      switch (operationType) {
-        case OperationTypeNode.QUERY:
-          return operations.filter((op) => !ignoredQueriesMap[op.name]);
-        case OperationTypeNode.MUTATION:
-          return operations.filter((op) => !ignoredMutationsMap[op.name]);
-        case OperationTypeNode.SUBSCRIPTION:
-          return operations.filter((op) => !ignoredSubscriptionsMap[op.name]);
-        default:
-          throw new Error("Unknown operation");
-      }
-    })();
-    const results = filteredOperations.map((operation) => {
-      const { codes, operationInputs } =
-        this.formatFieldsAndGetInputs(operation);
-      const argsString = this.formatInputStringForOperation(operationInputs);
-      return this.wrapBlock(operationType, operation.name, argsString, codes);
-    });
+    let results: string[] = [];
+    switch (generateKind.kind) {
+      case "fragment":
+        results.push("TODO: Implement fragment generation");
+      case "operation":
+        const filteredOperations = (() => {
+          switch (generateKind.operationType) {
+            case OperationTypeNode.QUERY:
+              return generateFrom.filter((op) => !this.ignoredQueriesMap[op.name]);
+            case OperationTypeNode.MUTATION:
+              return generateFrom.filter((op) => !this.ignoredMutationsMap[op.name]);
+            case OperationTypeNode.SUBSCRIPTION:
+              return generateFrom.filter((op) => !this.ignoredSubscriptionsMap[op.name]);
+            default:
+              throw new Error("Unknown operation");
+          }
+        })();
+        results.push(...filteredOperations.map((operation) => {
+          const { codes, operationInputs } =
+            this.formatFieldsAndGetInputs(operation);
+          const argsString = this.formatInputStringForOperation(operationInputs);
+          return this.wrapBlock(generateKind.operationType, operation.name, argsString, codes);
+        }));
+    };
     return results.join("\n\n");
   };
 
@@ -218,9 +228,9 @@ export class DocumentsGeneratorVisitor {
     indentCounter++;
     const fieldInputsString = field.inputs.length
       ? this.formatInputStringForResolver(
-          field.inputs.map((input) => input.name.value),
-          newParentNames
-        )
+        field.inputs.map((input) => input.name.value),
+        newParentNames
+      )
       : "";
     const subFields = this.typeDefsMap[field.type];
     const operationInputs = field.inputs.map((input): OperationInput => {
@@ -231,9 +241,8 @@ export class DocumentsGeneratorVisitor {
     });
     if (!subFields) {
       return {
-        codes: `${TAB.repeat(indentCounter)}${
-          field.name
-        }${fieldInputsString}\n`,
+        codes: `${TAB.repeat(indentCounter)}${field.name
+          }${fieldInputsString}\n`,
         operationInputs,
       };
     }
@@ -247,9 +256,8 @@ export class DocumentsGeneratorVisitor {
       )
     );
     const innerCode = results.map((r) => r.codes).join("");
-    const codes = `${TAB.repeat(indentCounter)}${
-      field.name
-    }${fieldInputsString} {\n${innerCode}${TAB.repeat(indentCounter)}}\n`;
+    const codes = `${TAB.repeat(indentCounter)}${field.name
+      }${fieldInputsString} {\n${innerCode}${TAB.repeat(indentCounter)}}\n`;
     const subFieldInputs = results
       .map((r) => r.operationInputs)
       .reduce((prev, curr) => prev.concat(curr));
@@ -320,15 +328,34 @@ export class DocumentsGeneratorVisitor {
   }
 
   private validateDocsToGenerate(docsToGenerate: string[]): string[] {
-    const result: string[] = DEFAULT_DOCS_TO_GENERATE.forEach((doc) => {
+    // Validate that the docsToGenerate value is valid
+    // And also ensure the correct order of processing, 
+    // i.e. "fragments" (if present) should be processed first
+    let result: string[];
+    DEFAULT_DOCS_TO_GENERATE.forEach((doc) => {
       if (docsToGenerate.includes(doc)) {
-        return doc;
+        result.push(doc);
       }
     });
-
-    if (docsToGenerate.every((doc) => DEFAULT_DOCS_TO_GENERATE.includes(doc))) {
-      return docsToGenerate;
+    if (result.length === 0) {
+      throw new Error("Invalid docsToGenerate value");
     }
-    throw new Error("Invalid docsToGenerate value");
+    return result;
+  }
+
+  private buildIgnoredMaps(ignore: { queries: string[]; mutations: string[]; subscriptions: string[]; fragments: string[]; }) {
+    ignore.queries.forEach(
+      (query) => (this.ignoredQueriesMap[query] = true)
+    );
+    ignore.mutations.forEach(
+      (mutation) => (this.ignoredMutationsMap[mutation] = true)
+    );
+    ignore.subscriptions.forEach(
+      (subscription) =>
+        (this.ignoredSubscriptionsMap[subscription] = true)
+    );
+    ignore.fragments.forEach(
+      (fragment) => (this.ignoredFragmentsMap[fragment] = true)
+    );
   }
 }

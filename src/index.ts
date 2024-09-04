@@ -21,16 +21,10 @@ export const plugin: PluginFunction<DocsGenPluginConfig> = (schema: GraphQLSchem
   const providedDocsVisitor = new ProvidedDocsVisitor(schema, [], config, documents);
   oldVisit(providedDocsAST, { leave: providedDocsVisitor });
   const providedDocsNames = providedDocsVisitor.getNames();
-
-
+  // Get AST of the full schema
   const astNode = getCachedDocumentNodeFromSchema(schema)
-  
-
-
+  // Generate
   const visitor = new DocumentsGeneratorVisitor(schema, [], config, documents);
-  
   oldVisit(astNode, { leave: visitor });
-  
-  // return visitor.generateDocuments(opsVisitor.getOperationNames());
   return visitor.generateDocuments(providedDocsNames);
 };
