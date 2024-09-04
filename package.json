@@ -1,0 +1,44 @@
+{
+  "name": "graphql-codegen-documents",
+  "version": "0.2.0",
+  "description": "GraphQL Code Generator plugin for generating documents",
+  "author": "Yury Zhytkou, zhitkoff@gmail.com",
+  "repository": "git@github.com:zhitkoff/graphql-codegen-documents.git",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc -m esnext --outDir dist/esnext && tsc -m commonjs --outDir dist/commonjs",
+    "test": "jest --config ./jest.config.js",
+    "lint": "tslint src/**/*.ts",
+    "lint:fix": "npm run lint -- --fix"
+  },
+  "dependencies": {
+    "@graphql-codegen/plugin-helpers": "^5.0.4",
+    "@graphql-codegen/visitor-plugin-common": "^5.3.1",
+    "auto-bind": "^4.0.0",
+    "tslib": "2.6.0"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^5.0.2",
+    "@graphql-codegen/testing": "^3.0.3",
+    "@types/jest": "^29.5.2",
+    "graphql": "^16.9.0",
+    "jest": "^29.5.0",
+    "jest-junit": "^16.0.0",
+    "ts-jest": "29.1.0",
+    "tslint": "^5.20.1",
+    "typescript": "5.1.5"
+  },
+  "peerDependencies": {
+    "graphql": "^16.9.0"
+  },
+  "sideEffects": false,
+  "main": "dist/commonjs/index.js",
+  "module": "dist/esnext/index.js",
+  "typings": "dist/esnext/index.d.ts",
+  "typescript": {
+    "definition": "dist/esnext/index.d.ts"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

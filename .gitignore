@@ -1,0 +1,7 @@
+node_modules
+npm-debug.log
+dist
+temp
+yarn-error.log
+junit.xml
+.npmrc
