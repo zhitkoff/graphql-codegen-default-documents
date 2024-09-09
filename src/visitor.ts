@@ -14,7 +14,12 @@ import {
   TypeNode,
   OperationTypeNode,
 } from "graphql";
-import { DocsGenPluginConfig, DEFAULT_RECUR_LEVEL, DEFAULT_DOCS_TO_GENERATE, TAB } from "./config";
+import {
+  DocsGenPluginConfig,
+  DEFAULT_RECUR_LEVEL,
+  DEFAULT_DOCS_TO_GENERATE,
+  TAB,
+} from "./config";
 
 interface NodeFieldType {
   type: string;
@@ -57,7 +62,9 @@ export class DocumentsGeneratorVisitor {
     documents: any[]
   ) {
     this.recursionLimit = rawConfig.recursionLimit || DEFAULT_RECUR_LEVEL;
-    this.docsToGenerate = this.validateDocsToGenerate(rawConfig.docsToGenerate || DEFAULT_DOCS_TO_GENERATE);
+    this.docsToGenerate = this.validateDocsToGenerate(
+      rawConfig.docsToGenerate || DEFAULT_DOCS_TO_GENERATE
+    );
     this.scalars = buildScalars(schema, {});
     this.typeDefsMap = {};
     this.interfaceFieldsMap = {};
@@ -102,7 +109,12 @@ export class DocumentsGeneratorVisitor {
     );
   }
 
-  generateDocuments(ignore: { queries: string[]; mutations: string[]; subscriptions: string[]; fragments: string[] }): string {
+  generateDocuments(ignore: {
+    queries: string[];
+    mutations: string[];
+    subscriptions: string[];
+    fragments: string[];
+  }): string {
     this.validateInterfaces();
     this.buildIgnoredMaps(ignore);
 
@@ -110,21 +122,30 @@ export class DocumentsGeneratorVisitor {
       let generateFrom: FieldType[];
       let generateKind: { kind: string; operationType?: OperationTypeNode };
       switch (doc) {
-        case "fragments":
-          generateFrom = this.typeDefsMap['Fragment'];
+        case "fragment":
+          generateFrom = this.typeDefsMap["Fragment"];
           generateKind = { kind: "fragment" };
           break;
-        case "queries":
-          generateFrom = this.typeDefsMap['Query'];
-          generateKind = { kind: "operation", operationType: OperationTypeNode.QUERY };
+        case "query":
+          generateFrom = this.typeDefsMap["Query"];
+          generateKind = {
+            kind: "operation",
+            operationType: OperationTypeNode.QUERY,
+          };
           break;
-        case "mutations":
-          generateFrom = this.typeDefsMap['Mutation'];
-          generateKind = { kind: "operation", operationType: OperationTypeNode.MUTATION };
+        case "mutation":
+          generateFrom = this.typeDefsMap["Mutation"];
+          generateKind = {
+            kind: "operation",
+            operationType: OperationTypeNode.MUTATION,
+          };
           break;
-        case "subscriptions":
-          generateFrom = this.typeDefsMap['Subscription'];
-          generateKind = { kind: "operation", operationType: OperationTypeNode.SUBSCRIPTION };
+        case "subscription":
+          generateFrom = this.typeDefsMap["Subscription"];
+          generateKind = {
+            kind: "operation",
+            operationType: OperationTypeNode.SUBSCRIPTION,
+          };
           break;
       }
       if (!generateFrom) {
@@ -148,22 +169,36 @@ export class DocumentsGeneratorVisitor {
         const filteredOperations = (() => {
           switch (generateKind.operationType) {
             case OperationTypeNode.QUERY:
-              return generateFrom.filter((op) => !this.ignoredQueriesMap[op.name]);
+              return generateFrom.filter(
+                (op) => !this.ignoredQueriesMap[op.name]
+              );
             case OperationTypeNode.MUTATION:
-              return generateFrom.filter((op) => !this.ignoredMutationsMap[op.name]);
+              return generateFrom.filter(
+                (op) => !this.ignoredMutationsMap[op.name]
+              );
             case OperationTypeNode.SUBSCRIPTION:
-              return generateFrom.filter((op) => !this.ignoredSubscriptionsMap[op.name]);
+              return generateFrom.filter(
+                (op) => !this.ignoredSubscriptionsMap[op.name]
+              );
             default:
               throw new Error("Unknown operation");
           }
         })();
-        results.push(...filteredOperations.map((operation) => {
-          const { codes, operationInputs } =
-            this.formatFieldsAndGetInputs(operation);
-          const argsString = this.formatInputStringForOperation(operationInputs);
-          return this.wrapBlock(generateKind.operationType, operation.name, argsString, codes);
-        }));
-    };
+        results.push(
+          ...filteredOperations.map((operation) => {
+            const { codes, operationInputs } =
+              this.formatFieldsAndGetInputs(operation);
+            const argsString =
+              this.formatInputStringForOperation(operationInputs);
+            return this.wrapBlock(
+              generateKind.operationType,
+              operation.name,
+              argsString,
+              codes
+            );
+          })
+        );
+    }
     return results.join("\n\n");
   };
 
@@ -228,9 +263,9 @@ export class DocumentsGeneratorVisitor {
     indentCounter++;
     const fieldInputsString = field.inputs.length
       ? this.formatInputStringForResolver(
-        field.inputs.map((input) => input.name.value),
-        newParentNames
-      )
+          field.inputs.map((input) => input.name.value),
+          newParentNames
+        )
       : "";
     const subFields = this.typeDefsMap[field.type];
     const operationInputs = field.inputs.map((input): OperationInput => {
@@ -241,8 +276,9 @@ export class DocumentsGeneratorVisitor {
     });
     if (!subFields) {
       return {
-        codes: `${TAB.repeat(indentCounter)}${field.name
-          }${fieldInputsString}\n`,
+        codes: `${TAB.repeat(indentCounter)}${
+          field.name
+        }${fieldInputsString}\n`,
         operationInputs,
       };
     }
@@ -256,8 +292,9 @@ export class DocumentsGeneratorVisitor {
       )
     );
     const innerCode = results.map((r) => r.codes).join("");
-    const codes = `${TAB.repeat(indentCounter)}${field.name
-      }${fieldInputsString} {\n${innerCode}${TAB.repeat(indentCounter)}}\n`;
+    const codes = `${TAB.repeat(indentCounter)}${
+      field.name
+    }${fieldInputsString} {\n${innerCode}${TAB.repeat(indentCounter)}}\n`;
     const subFieldInputs = results
       .map((r) => r.operationInputs)
       .reduce((prev, curr) => prev.concat(curr));
@@ -329,9 +366,9 @@ export class DocumentsGeneratorVisitor {
 
   private validateDocsToGenerate(docsToGenerate: string[]): string[] {
     // Validate that the docsToGenerate value is valid
-    // And also ensure the correct order of processing, 
-    // i.e. "fragments" (if present) should be processed first
-    let result: string[];
+    // And also ensure the correct order of processing,
+    // i.e. "fragment" (if present) should be processed first
+    let result: string[] = [];
     DEFAULT_DOCS_TO_GENERATE.forEach((doc) => {
       if (docsToGenerate.includes(doc)) {
         result.push(doc);
@@ -343,16 +380,18 @@ export class DocumentsGeneratorVisitor {
     return result;
   }
 
-  private buildIgnoredMaps(ignore: { queries: string[]; mutations: string[]; subscriptions: string[]; fragments: string[]; }) {
-    ignore.queries.forEach(
-      (query) => (this.ignoredQueriesMap[query] = true)
-    );
+  private buildIgnoredMaps(ignore: {
+    queries: string[];
+    mutations: string[];
+    subscriptions: string[];
+    fragments: string[];
+  }) {
+    ignore.queries.forEach((query) => (this.ignoredQueriesMap[query] = true));
     ignore.mutations.forEach(
       (mutation) => (this.ignoredMutationsMap[mutation] = true)
     );
     ignore.subscriptions.forEach(
-      (subscription) =>
-        (this.ignoredSubscriptionsMap[subscription] = true)
+      (subscription) => (this.ignoredSubscriptionsMap[subscription] = true)
     );
     ignore.fragments.forEach(
       (fragment) => (this.ignoredFragmentsMap[fragment] = true)

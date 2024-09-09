@@ -1,7 +1,7 @@
 import { RawConfig } from '@graphql-codegen/visitor-plugin-common';
 
 export const DEFAULT_RECUR_LEVEL = 5;
-export const DEFAULT_DOCS_TO_GENERATE = [ "fragments", "queries", "mutations", "subscriptions" ];
+export const DEFAULT_DOCS_TO_GENERATE = ['fragment', 'query', 'mutation', 'subscription'];
 // export const DOCS_GENERATION_ORDER = [ "fragments", "queries", "mutations", "subscriptions" ];
 export const TAB = "  ";
 
