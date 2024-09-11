@@ -1,7 +1,7 @@
 import { LoadedFragment } from '@graphql-codegen/visitor-plugin-common';
 import * as autoBind from 'auto-bind';
 import { FragmentDefinitionNode, GraphQLSchema, OperationDefinitionNode } from 'graphql';
-import { DocsGenPluginConfig } from './config';
+import { DefaultDocsPluginConfig } from './config';
 
 export class ProvidedDocsVisitor {
   queries: string[];
@@ -9,7 +9,7 @@ export class ProvidedDocsVisitor {
   subscriptions: string[];
   fragments: string[];
 
-  constructor(schema: GraphQLSchema, fragments: LoadedFragment[], rawConfig: DocsGenPluginConfig, documents: any[]) {
+  constructor(schema: GraphQLSchema, fragments: LoadedFragment[], rawConfig: DefaultDocsPluginConfig, documents: any[]) {
     this.queries = [];
     this.mutations = [];
     this.subscriptions = [];
@@ -17,6 +17,7 @@ export class ProvidedDocsVisitor {
     autoBind(this as any);
   }
 
+  // TODO redo to drop getNames and use the visitor directly
   OperationDefinition(node: OperationDefinitionNode) {
     const operationName = node.name.value;
     switch (node.operation) {
