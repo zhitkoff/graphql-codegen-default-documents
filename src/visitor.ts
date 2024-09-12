@@ -29,9 +29,11 @@ import {
   InputValueDefinitionNode,
   isAbstractType,
   isEnumType,
+  isInterfaceType,
   isListType,
   isNullableType,
   isObjectType,
+  isOutputType,
   Kind,
   ListTypeNode,
   NamedTypeNode,
@@ -172,8 +174,9 @@ export class DefaultDocsVisitor<
   FieldDefinition(node: FieldDefinitionNode): string {
     const name = this.getName(node);
     const baseType = getBaseTypeNode(node.type);
+    const gqlBaseType = this.getGQLType(this.getName(baseType));
     const comment = this.getNodeComment(node);
-    console.log('Field:', name, baseType);
+    console.log('Field:', name, baseType, gqlBaseType);
     const opsArgs = node.arguments?.map((arg) => {
       const argName = this.getName(arg);
       const argType = getBaseTypeNode(arg.type);
@@ -208,18 +211,61 @@ export class DefaultDocsVisitor<
       return '';
     })();
     const baseTypeFields = (() => {
-      const gqlType = this.getGQLType(this.getName(baseType));
-      if (isObjectType(gqlType)) {
-        const fields = gqlType.getFields();
-        return '{\n' + Object.keys(fields).map((f) => indent(f)).join('\n') + '\n}';
-      } else if (isAbstractType(baseType)) {
-        return 'ABSTRACT';
-      } else {
-        return '';
-      }
+      return this.printBaseTypeFields(gqlBaseType);
+      // if (isObjectType(gqlBaseType)) {
+      //   const fields = gqlBaseType.getFields();
+      //   return ' {\n' + Object.keys(fields).map((f) => indent(f)).join('\n') + '\n}';
+      // } else if (isInterfaceType(gqlBaseType)) {
+      //   const coreInterfaceFields = gqlBaseType.getFields();
+      //   const implObjTypes = this.schema.getImplementations(gqlBaseType).objects;
+      //   const impls = implObjTypes.map((o) => {
+      //     const fields = Object.keys(o.getFields()).filter((f) => !coreInterfaceFields[f]);
+      //     return '\n\n... on ' + this.getName(o.astNode) + ' {\n' + fields.map((f) => indent(f)).join('\n') + '\n}';
+      //   }).join('\n');
+      //   return ' {\n'+ Object.keys(coreInterfaceFields).map((f) => indent(f)).join('\n') + impls + '\n}';
+      // }
+      // else {
+      //   return '';
+      // }
     })();
 
+
+
+
     return comment + '\n' + this.getCamelCase(name) + opsArgsString + ' {\n' + indent(name + resolverArgsString) + baseTypeFields + '\n}';
+  }
+
+  private printBaseTypeFields(gqlBaseType: GraphQLType): string {
+    if (isObjectType(gqlBaseType)) {
+      const fields = gqlBaseType.getFields();
+      const fieldsStr = Object.keys(fields).map((f) => {
+        const t = fields[f].type as GraphQLType;
+        if (isObjectType(t) || isInterfaceType(t)) {
+          return this.printBaseTypeFields(t);
+        }
+        return indent(f);
+      }).join('\n')
+      return ' {\n' + fieldsStr + '\n}';
+    } else if (isInterfaceType(gqlBaseType)) {
+      const coreInterfaceFields = gqlBaseType.getFields();
+      const implObjTypes = this.schema.getImplementations(gqlBaseType).objects;
+      const impls = implObjTypes.map((o) => {
+        const allFields = o.getFields();
+        const fields = Object.keys(allFields).filter((f) => !coreInterfaceFields[f]);
+        const fieldsStr = fields.map((f) => {
+          const t = allFields[f].type as GraphQLType;
+          if (isObjectType(t) || isInterfaceType(t)) {
+            return this.printBaseTypeFields(t);
+          }
+          return indent(f);
+        }).join('\n')
+        return '\n\n... on ' + this.getName(o.astNode) + ' {\n' + fieldsStr + '\n}';
+      }).join('\n');
+      return ' {\n'+ Object.keys(coreInterfaceFields).map((f) => indent(f)).join('\n') + impls + '\n}';
+    }
+    else {
+      return '';
+    }
   }
 
   private getGQLType(name: string): GraphQLType {
