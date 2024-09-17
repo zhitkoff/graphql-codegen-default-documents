@@ -1,18 +1,6 @@
 import {
-  BaseVisitor,
-  BaseTypesVisitor,
-  DeclarationBlock,
-  DeclarationKind,
-  getConfigValue,
   indent,
-  isOneOfInputObjectType,
-  normalizeAvoidOptionals,
-  ParsedTypesConfig,
-  ParsedConfig,
   transformComment,
-  wrapWithSingleQuotes,
-  LoadedFragment,
-  getRootTypeNames,
   getBaseTypeNode,
   buildScalars,
   ParsedScalarsMap,
@@ -22,61 +10,21 @@ import * as autoBind from 'auto-bind';
 import {
   ASTNode,
   DirectiveNode,
-  EnumTypeDefinitionNode,
   EnumValueDefinitionNode,
   FieldDefinitionNode,
-  getIntrospectionQuery,
   GraphQLInterfaceType,
   GraphQLObjectType,
   GraphQLSchema,
-  graphqlSync,
   GraphQLType,
-  InputObjectTypeDefinitionNode,
   InputValueDefinitionNode,
   InterfaceTypeDefinitionNode,
-  isAbstractType,
   isEnumType,
-  isInterfaceType,
   isListType,
   isNullableType,
-  isObjectType,
-  isOutputType,
   isScalarType,
-  isTypeDefinitionNode,
-  Kind,
-  ListTypeNode,
-  NamedTypeNode,
-  NameNode,
-  NonNullTypeNode,
   ObjectTypeDefinitionNode,
-  ObjectTypeExtensionNode,
-  OperationTypeNode,
-  TypeDefinitionNode,
-  TypeNode,
-  UnionTypeDefinitionNode,
 } from 'graphql';
-// import { TypeScriptOperationVariablesToObject } from './typescript-variables-to-object.js';
 import { DefaultDocsPluginConfig, DEFAULT_DOCS_TO_GENERATE, DEFAULT_FRAGMENT_MINIMUM_FIELDS } from './config';
-
-// interface NodeFieldType {
-//   type: string;
-//   isNullable: boolean;
-//   isArray: boolean;
-//   isScalar: boolean;
-// }
-
-// interface OperationInput {
-//   nameParts: string[];
-//   type: NodeFieldType;
-// }
-
-// interface FieldType {
-//   name: string;
-//   type?: string;
-//   inputs: InputValueDefinitionNode[];
-// }
-
-// type InterfaceName = string;
 
 // TODO - handle Unions as well
 type FieldParentNode = ObjectTypeDefinitionNode | InterfaceTypeDefinitionNode;
@@ -96,57 +44,57 @@ export class DefaultDocsVisitor<
   readonly docsToGenerate: string[];
   readonly fragmentMinimumFields: number;
   schema: GraphQLSchema;
-  // typeDefsMap: { [name: string]: FieldType[] };
   typeMap: { [name: string]: GraphQLType };
   Query: GraphQLObjectType;
   Mutation: GraphQLObjectType;
   Subscription: GraphQLObjectType;
   scalars: ParsedScalarsMap;
-  // interfaceImplementationsMap: { [objectName: string]: InterfaceName[] };
-  // interfaceFieldsMap: { [interfaceName: string]: string[] };
   ignoredQueriesMap: { [name: string]: boolean };
   ignoredMutationsMap: { [name: string]: boolean };
   ignoredSubscriptionsMap: { [name: string]: boolean };
   ignoredFragmentsMap: { [name: string]: boolean };
-  // introspected_schema: any;
 
   constructor(schema: GraphQLSchema, rawConfig: TRawConfig, additionalConfig: Partial<TParsedConfig> = {}) {
     this.docsToGenerate = rawConfig.docsToGenerate || DEFAULT_DOCS_TO_GENERATE;
-    this.fragmentMinimumFields = rawConfig.fragmentMininumFields || DEFAULT_FRAGMENT_MINIMUM_FIELDS;
+    this.fragmentMinimumFields = rawConfig.fragmentMinimumFields || DEFAULT_FRAGMENT_MINIMUM_FIELDS;
     this.schema = schema;
     this.typeMap = schema.getTypeMap();
     this.Query = schema.getQueryType();
     this.Mutation = schema.getMutationType();
     this.Subscription = schema.getSubscriptionType();
     this.scalars = buildScalars(schema, {});
-    // this.typeDefsMap = {};
-    // this.interfaceFieldsMap = {};
-    // this.interfaceImplementationsMap = {};
     this.ignoredQueriesMap = {};
     this.ignoredMutationsMap = {};
     this.ignoredSubscriptionsMap = {};
     this.ignoredFragmentsMap = {};
-
-    // const schemaContents = graphqlSync({ schema, source: getIntrospectionQuery() });
-    // this.introspected_schema = schemaContents.data?.__schema;
-
     this.buildIgnoredMaps(additionalConfig.providedDocsNames);
     autoBind(this as any);
   }
 
-  // DirectiveDefinition
-  // EnumTypeDefinition
-  // InputObjectTypeDefinition
-  // InterfaceTypeDefinition
-  // * ObjectTypeDefinition
-  // ScalarTypeDefinition
-  // SchemaDefinition
-  // Document
+  // These definitions must be specifically dropped when visited as we are currently not processing them
+  InterfaceTypeDefinition(node: InterfaceTypeDefinitionNode) {
+    return null;
+  }
+  SchemaDefinition() {
+    return null;
+  }
+  InputObjectTypeDefinition() {
+    return null;
+  }
+  EnumTypeDefinition() {
+    return null;
+  }
+  DirectiveDefinition() {
+    return null;
+  }
+  UnionTypeDefinition() {
+    return null;
+  }
+  ScalarTypeDefinition() {
+    return null;
+  }
 
-  // Name(node: NameNode): string {
-  //   return node.value;
-  // }
-
+  // Main entry point
   ObjectTypeDefinition(node: ObjectTypeDefinitionNode, key: number | string, parent: any): string {
     // TODO should we really skip all object types without fields?
     if (!node.fields) {
@@ -195,29 +143,18 @@ export class DefaultDocsVisitor<
     }
   }
 
-  SchemaDefinition() {
-    return null;
-  }
-
-  private wrapBlock(operationType: string, operationName: string, args: string, code: string): string {
-    return `${operationType} ${operationName}${args} { \n${code}}`;
-  }
-
+  // Turn FieldDefinitionNode into a function that prints the field
+  // To be used in ObjectTypeDefinition
   FieldDefinition(node: FieldDefinitionNode, key: string | number, parent: any): FieldDefinitionPrintFn {
     return (generateKind, objectTypeDefinitionParent) => {
       const fieldDefinitionParent = parent;
       const name = this.getName(node);
       const camelCaseName = this.getCamelCase(name);
-      // const baseType = getBaseTypeNode(node.type);
       const comment = this.getNodeComment(node);
-      // const parentNode = parent[key] as TypeDefinitionNode;
       if (generateKind === 'fragment') {
-        // TODO: Implement subtypes expansion
-        console.log('fragment', name);
         const baseNodeFieldsString = this.printBaseNodeFields(node, false, objectTypeDefinitionParent, fieldDefinitionParent, 1);
-        return comment + indent(name,1) + indent(baseNodeFieldsString,1);
+        return comment + indent(name, 1) + indent(baseNodeFieldsString, 1);
       } else {
-        console.log('operation', name);
         // Skip ignored operations (provided in custom documents to the plugin) to avoid name conflicts
         // Skipping ignored fragments is handled in ObjectTypeDefinition
         if (this.skipIgnoredOperations(generateKind, camelCaseName)) {
@@ -226,7 +163,6 @@ export class DefaultDocsVisitor<
         // Operation field - query, mutation, subscription
         const opsArgs = node.arguments?.map((arg) => {
           const argName = this.getName(arg);
-          // const argType = getBaseTypeNode(arg.type);
           let argTypeName = this.getName(getBaseTypeNode(arg.type));
           if (!isNullableType(arg.type)) {
             if (isListType(arg.type)) {
@@ -257,9 +193,8 @@ export class DefaultDocsVisitor<
           }
           return '';
         })();
-        // const baseNodeFieldsString = '';
         const baseNodeFieldsString = this.printBaseNodeFields(node, false, objectTypeDefinitionParent, fieldDefinitionParent, 1);
-
+        // print out the operation (query, mutation, subscription)
         return (
           comment +
           generateKind +
@@ -267,7 +202,7 @@ export class DefaultDocsVisitor<
           camelCaseName +
           opsArgsString +
           ' {\n' +
-          indent(name + resolverArgsString) +
+          indent(name + resolverArgsString, 1) +
           baseNodeFieldsString +
           '\n}'
         );
@@ -289,76 +224,90 @@ export class DefaultDocsVisitor<
     }
   }
 
-  private printBaseNodeFields(node: FieldDefinitionNode, subtype: boolean, objectTypeDefinitionParent: any, fieldDefinitionParent: any, i: number): string {
+  // Recursively print fields of FieldDefinitionNode
+  // Expand fields of subtypes/interfaces unless using 'AllFields' fragment
+  private printBaseNodeFields(
+    node: FieldDefinitionNode,
+    subtype: boolean,
+    objectTypeDefinitionParent: any,
+    fieldDefinitionParent: any,
+    i: number
+  ): string {
     const baseTypeNode = getBaseTypeNode(node.type);
     const baseNodeTypeName = this.getName(baseTypeNode);
     const nodeName = this.getName(node);
+    const gqlBaseType = this.typeMap[baseNodeTypeName] as GraphQLType;
 
-    console.log('baseTypeNode', baseTypeNode);
-    console.log('baseNodeTypeName', baseNodeTypeName);
-    console.log('isScalar', this.isScalar(baseNodeTypeName));
-    console.log('indent', i);
-
-    if (this.isScalar(baseNodeTypeName)) {
-      return subtype ? indent(nodeName,i) : '';
+    if (isScalarType(gqlBaseType) || isEnumType(gqlBaseType)) {
+      return subtype ? indent(nodeName, i) : '';
     }
+
     const baseTypeDefNode: FieldParentNode = objectTypeDefinitionParent.find(
       (n: any) => (n.kind === 'ObjectTypeDefinition' || 'InterfaceTypeDefinition') && this.getName(n) === baseNodeTypeName
     );
-    // console.log('baseNodeTypeName', baseNodeTypeName);
-    // console.log('baseTypeDefNode', baseTypeDefNode);
-    // return '';
-    // const x = parentNode.fields?.
-    // const baseGraphQLType = this.typeMap[baseNodeTypeName];
-    // const gqlBaseType = this.getGQLType(baseTypeName);
+
     if (this.isObjectTypeDefinitionNode(baseTypeDefNode)) {
       const fields = baseTypeDefNode.fields;
       // check if fragment is requested and print baseTypeName+AllFields on object type field instead of unfolding it
       const expandSubTypes =
         !this.docsToGenerate.includes('fragment') ||
-        (this.docsToGenerate.includes('fragment') && Object.keys(fields).length >= this.fragmentMinimumFields);
+        (this.docsToGenerate.includes('fragment') && Object.keys(fields).length < this.fragmentMinimumFields);
 
       const fieldsStr = expandSubTypes
         ? fields
             .map((f) => {
-              return indent(this.printBaseNodeFields(f, true, objectTypeDefinitionParent, fieldDefinitionParent, i));
+              return this.printBaseNodeFields(f, true, objectTypeDefinitionParent, fieldDefinitionParent, subtype ? i + 1 : i);
             })
             .join('\n')
         : indent(`...${baseNodeTypeName}AllFields`, i);
-      console.log('fieldsStr\n', fieldsStr);
-      return `${subtype ? indent(nodeName,i) : ''} {\n` + indentMultiline(fieldsStr,subtype?i:i-1) + indentMultiline('\n}',subtype?i+1:i);
+
+      // print out the object type fields (or 'AllFields' fragment for it)
+      return `${subtype ? indent(nodeName, i) : ''}` + '{\n' + indentMultiline(fieldsStr, i) + '\n' + indent('}', i);
     } else if (this.isInterfaceTypeDefinitionNode(baseTypeDefNode)) {
       const coreInterfaceFields = baseTypeDefNode.fields;
-
-      const gqlBaseType = this.getGQLType(baseNodeTypeName) as GraphQLInterfaceType;
-      const implTypes = this.schema.getImplementations(gqlBaseType).objects.map((o) => {
+      const coreInterfaceFieldsStr = coreInterfaceFields
+        .map((f) => {
+          return this.printBaseNodeFields(f, true, objectTypeDefinitionParent, fieldDefinitionParent, subtype ? i + 1 : i);
+        })
+        .join('\n');
+      // Get all object types that implement the interface
+      const implTypes = this.schema.getImplementations(gqlBaseType as GraphQLInterfaceType).objects.map((o) => {
         const implType: FieldParentNode = objectTypeDefinitionParent.find(
           (n: any) => (n.kind === 'ObjectTypeDefinition' || 'InterfaceTypeDefinition') && this.getName(n) === this.getName(o.astNode)
         );
         return implType;
       });
-      const implementations = implTypes
+      // Build implementations string
+      const implementationsStr = implTypes
         .map((impl) => {
           const implTypeFields = impl.fields;
-          // const fieldNamesToPrint = Object.keys(implTypeFields).filter((f) => !coreInterfaceFields.find((cf) => this.getName(cf.name) === f));
-          const fields = implTypeFields.filter((f) => !coreInterfaceFields.find((cf) => this.getName(cf.name) === this.getName(f.name)));
-          // check if fragment is requested and print baseTypeName+AllFields on object type field instead of unfolding it
-          const expandSubTypes =
-            !this.docsToGenerate.includes('fragment') ||
-            (this.docsToGenerate.includes('fragment') && Object.keys(fields).length >= this.fragmentMinimumFields);
-          const fieldsStr = expandSubTypes
-            ? fields
-                .map((f) => {
-                  return indent(this.printBaseNodeFields(f, true, objectTypeDefinitionParent, fieldDefinitionParent, i));
-                })
-                .join('\n')
-            : indent(`...${this.getName(impl.name)}AllFields`, i);
-          return indentMultiline('\n\n... on ' + this.getName(impl.name) + ' {\n' + fieldsStr + '\n}', i);
+          const extraImplFields = implTypeFields.filter(
+            (f) => !coreInterfaceFields.find((cf) => this.getName(cf.name) === this.getName(f.name))
+          );
+          // Always expand subtypes for interfaces
+          const fieldsStr = extraImplFields
+            .map((f) => {
+              return this.printBaseNodeFields(f, true, objectTypeDefinitionParent, fieldDefinitionParent, subtype ? i + 2 : i);
+            })
+            .join('\n');
+          return (
+            '\n' +
+            indent('... on ' + this.getName(impl.name) + ' {', i) +
+            '\n' +
+            indentMultiline(fieldsStr, i) +
+            '\n' +
+            indent('}', i)
+          );
         })
         .join('\n');
-      // TODO - do we need to check for expandSubTypes here?
-      console.log('implementations\n', implementations);
-      return `${subtype ? nodeName : ''} {\n` + indent(coreInterfaceFields.map((f) => this.getName(f)).join('\n'), i + 1) + implementations + '\n}';
+      return (
+        `${subtype ? indent(nodeName, i) : ''}` +
+        '{\n' +
+        indentMultiline(coreInterfaceFieldsStr, i) +
+        indentMultiline(implementationsStr, i) +
+        '\n' +
+        indent('}', i)
+      );
     } else {
       return '';
     }
@@ -368,14 +317,6 @@ export class DefaultDocsVisitor<
   }
   private isInterfaceTypeDefinitionNode(node: FieldParentNode) {
     return !!node && node.kind === 'InterfaceTypeDefinition';
-  }
-
-  private isScalar(name: string): boolean {
-    return !!this.scalars[name];
-  }
-
-  private getGQLType(name: string): GraphQLType {
-    return this.typeMap[name];
   }
 
   private getNodeComment(node: FieldDefinitionNode | EnumValueDefinitionNode | InputValueDefinitionNode): string {
@@ -399,272 +340,6 @@ export class DefaultDocsVisitor<
       return reason;
     }
   }
-
-  // FieldDefinition(node: FieldDefinitionNode): FieldType {
-  // const fieldType = this.parseType(node.type);
-  // if (this.scalars[fieldType.type]) {
-  //   return { name: node.name.value, inputs: [...node.arguments] };
-  // }
-  // return {
-  //   name: node.name.value,
-  //   type: fieldType.type,
-  //   inputs: [...node.arguments],
-  // };
-  // }
-
-  // InterfaceTypeDefinition(node: InterfaceTypeDefinitionNode) {
-  //   // const fields = node.fields as unknown as FieldType[];
-  //   // this.interfaceFieldsMap[node.name.value] = fields.map(
-  //   //   (field) => field.name
-  //   // );
-  // }
-
-  // generateDocuments(ignore: {
-  //   queries: string[];
-  //   mutations: string[];
-  //   subscriptions: string[];
-  //   fragments: string[];
-  // }): string {
-  //   // this.validateInterfaces();
-  //   this.buildIgnoredMaps(ignore);
-
-  //   const generatedCode = this.docsToGenerate.map((doc) => {
-  //     let generateFrom: FieldType[];
-  //     let generateKind: { kind: string; operationType?: OperationTypeNode };
-  //     switch (doc) {
-  //       case "fragment":
-  //         generateFrom = this.typeDefsMap["Fragment"];
-  //         generateKind = { kind: "fragment" };
-  //         break;
-  //       case "query":
-  //         generateFrom = this.typeDefsMap["Query"];
-  //         generateKind = {
-  //           kind: "operation",
-  //           operationType: OperationTypeNode.QUERY,
-  //         };
-  //         break;
-  //       case "mutation":
-  //         generateFrom = this.typeDefsMap["Mutation"];
-  //         generateKind = {
-  //           kind: "operation",
-  //           operationType: OperationTypeNode.MUTATION,
-  //         };
-  //         break;
-  //       case "subscription":
-  //         generateFrom = this.typeDefsMap["Subscription"];
-  //         generateKind = {
-  //           kind: "operation",
-  //           operationType: OperationTypeNode.SUBSCRIPTION,
-  //         };
-  //         break;
-  //     }
-  //     if (!generateFrom) {
-  //       return "";
-  //     }
-  //     return this.generateOld(generateFrom, generateKind);
-  //   });
-
-  //   return generatedCode.join("\n\n\n");
-  // }
-
-  // private generateOld = (
-  //   generateFrom: FieldType[],
-  //   generateKind: { kind: string; operationType?: OperationTypeNode }
-  // ) => {
-  //   let results: string[] = [];
-  //   switch (generateKind.kind) {
-  //     case "fragment":
-  //       results.push("TODO: Implement fragment generation");
-  //     case "operation":
-  //       const filteredOperations = (() => {
-  //         switch (generateKind.operationType) {
-  //           case OperationTypeNode.QUERY:
-  //             return generateFrom.filter(
-  //               (op) => !this.ignoredQueriesMap[op.name]
-  //             );
-  //           case OperationTypeNode.MUTATION:
-  //             return generateFrom.filter(
-  //               (op) => !this.ignoredMutationsMap[op.name]
-  //             );
-  //           case OperationTypeNode.SUBSCRIPTION:
-  //             return generateFrom.filter(
-  //               (op) => !this.ignoredSubscriptionsMap[op.name]
-  //             );
-  //           default:
-  //             throw new Error("Unknown operation");
-  //         }
-  //       })();
-  //       results.push(
-  //         ...filteredOperations.map((operation) => {
-  //           const { codes, operationInputs } =
-  //             this.formatFieldsAndGetInputs(operation);
-  //           const argsString =
-  //             this.formatInputStringForOperation(operationInputs);
-  //           return this.wrapBlock(
-  //             generateKind.operationType,
-  //             operation.name,
-  //             argsString,
-  //             codes
-  //           );
-  //         })
-  //       );
-  //   }
-  //   return results.join("\n\n");
-  // };
-
-  // private formatInputStringForOperation(inputs: OperationInput[]): string {
-  //   let inputString = '';
-  //   const formatType = (nodeType: NodeFieldType): string => {
-  //     let typeValue = nodeType.type;
-  //     if (!nodeType.isNullable) {
-  //       if (nodeType.isArray) {
-  //         typeValue = `[${typeValue}!]!`;
-  //       } else {
-  //         typeValue = `${typeValue}!`;
-  //       }
-  //     } else {
-  //       if (nodeType.isArray) {
-  //         typeValue = `[${typeValue}]`;
-  //       }
-  //     }
-  //     return typeValue;
-  //   };
-  //   if (inputs.length) {
-  //     inputString = (() => {
-  //       const inputsString = inputs
-  //         .map((input) => {
-  //           return ['$' + this.getCamelCase(input.nameParts), formatType(input.type)].join(': ');
-  //         })
-  //         .join(', ');
-  //       return '(' + inputsString + ')';
-  //     })();
-  //   }
-  //   return inputString;
-  // }
-
-  // private formatInputStringForResolver(names: string[], inputs: string[]): string {
-  //   const argumentsString = names
-  //     .map((name) => {
-  //       return [name, '$' + this.getCamelCase([...inputs, name])].join(': ');
-  //     })
-  //     .join(', ');
-  //   return '(' + argumentsString + ')';
-  // }
-
-  // private formatFieldsAndGetInputs(
-  //   // field: FieldType,
-  //   field: FieldDefinitionNode,
-  //   indentCounter = 0,
-  //   parentTypes: { [type: string]: number } = {},
-  //   parentNames: string[] | null = null
-  // ): { codes: string; operationInputs: OperationInput[] } {
-  //   const namedType = this.schema.getType(this.getTypeName(field.type));
-  //   const possibleTypes = getPossibleTypes(this.schema, namedType);
-  //   // const recurCounter = parentTypes[field.type] || 0;
-  //   // const isOverRecursionLimit = recurCounter > this.recursionLimit;
-  //   // if (isOverRecursionLimit) {
-  //   //   return { codes: "", operationInputs: [] };
-  //   // }
-  //   const newParentTypes = { ...parentTypes, [field.type]: recurCounter + 1 };
-  //   const newParentNames = parentNames ? [...parentNames, field.name] : [];
-  //   indentCounter++;
-  //   const fieldInputsString = field.inputs.length
-  //     ? this.formatInputStringForResolver(
-  //         field.inputs.map((input) => input.name.value),
-  //         newParentNames
-  //       )
-  //     : "";
-  //   const subFields = this.typeDefsMap[field.type];
-  //   const operationInputs = field.inputs.map((input): OperationInput => {
-  //     return {
-  //       nameParts: [...newParentNames, input.name.value],
-  //       type: this.parseType(input.type),
-  //     };
-  //   });
-  //   if (!subFields) {
-  //     return {
-  //       codes: `${TAB.repeat(indentCounter)}${
-  //         field.name
-  //       }${fieldInputsString}\n`,
-  //       operationInputs,
-  //     };
-  //   }
-
-  //   const results = subFields.map((subField) =>
-  //     this.formatFieldsAndGetInputs(
-  //       subField,
-  //       indentCounter,
-  //       newParentTypes,
-  //       newParentNames
-  //     )
-  //   );
-  //   const innerCode = results.map((r) => r.codes).join("");
-  //   const codes = `${TAB.repeat(indentCounter)}${
-  //     field.name
-  //   }${fieldInputsString} {\n${innerCode}${TAB.repeat(indentCounter)}}\n`;
-  //   const subFieldInputs = results
-  //     .map((r) => r.operationInputs)
-  //     .reduce((prev, curr) => prev.concat(curr));
-  //   return { codes, operationInputs: [...operationInputs, ...subFieldInputs] };
-  // }
-
-  // private parseType(rawType: TypeNode | string): NodeFieldType {
-  //   const typeNode = rawType as TypeNode;
-  //   if (typeNode.kind === 'NamedType') {
-  //     return {
-  //       type: typeNode.name.value,
-  //       isNullable: true,
-  //       isArray: false,
-  //       isScalar: !!this.scalars[typeNode.name.value],
-  //     };
-  //   } else if (typeNode.kind === 'NonNullType') {
-  //     return {
-  //       ...this.parseType(typeNode.type),
-  //       isNullable: false,
-  //     };
-  //   } else if (typeNode.kind === 'ListType') {
-  //     return {
-  //       ...this.parseType(typeNode.type),
-  //       isArray: true,
-  //       isNullable: true,
-  //     };
-  //   }
-  //   throw new Error('error');
-  // }
-
-  // private getTypeName(node: TypeNode): string {
-  //   switch (node.kind) {
-  //     case 'NamedType':
-  //       return node.name.value;
-  //     case 'NonNullType':
-  //       return this.getTypeName(node.type);
-  //     case 'ListType':
-  //       return this.getTypeName(node.type);
-  //     default:
-  //       throw new Error('Unknown TypeNode kind: ' + node.kind);
-  //   }
-  // }
-
-  // private validateInterfaces(): void {
-  //   Object.keys(this.interfaceImplementationsMap).forEach((k) => {
-  //     let fieldsFromInterfaces = [];
-  //     const interfaces = this.interfaceImplementationsMap[k];
-  //     interfaces.forEach((interfaceName) => {
-  //       const names = this.interfaceFieldsMap[interfaceName];
-  //       fieldsFromInterfaces = [...fieldsFromInterfaces, ...names];
-  //     });
-  //     const uniqueFields = Array.from(new Set(fieldsFromInterfaces));
-  //     const objectMap: { [name: string]: true } = {};
-  //     this.typeDefsMap[k].forEach((f) => {
-  //       objectMap[f.name] = true;
-  //     });
-  //     uniqueFields.forEach((field) => {
-  //       if (!objectMap[field]) {
-  //         throw new Error("Missing " + field + " in " + k);
-  //       }
-  //     });
-  //   });
-  // }
 
   private getCamelCase(str: string): string {
     return str.charAt(0).toUpperCase() + str.substring(1);

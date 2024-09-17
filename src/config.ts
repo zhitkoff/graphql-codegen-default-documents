@@ -1,7 +1,7 @@
 import { RawConfig } from '@graphql-codegen/visitor-plugin-common';
 
 export const DEFAULT_DOCS_TO_GENERATE = ['fragment', 'query', 'mutation', 'subscription'];
-export const DEFAULT_FRAGMENT_MINIMUM_FIELDS = 2;
+export const DEFAULT_FRAGMENT_MINIMUM_FIELDS = 3;
 
 export interface DefaultDocsPluginConfig extends RawConfig {
     /**
@@ -22,10 +22,10 @@ export interface DefaultDocsPluginConfig extends RawConfig {
     */
     docsToGenerate?: [ string ];
     /**
-     * @name fragmentMininumFields
+     * @name fragmentMinimumFields
      * @type number
      * @description Minimum number of fields a fragment must have to be included in the generated documents
-     * @default 2
+     * @default 3
      *
      * @example
      * ```yml
@@ -34,8 +34,8 @@ export interface DefaultDocsPluginConfig extends RawConfig {
      *  plugins:
      *    - graphql-codegen-documents
      *  config:
-     *    fragmentMininumFields: 3
+     *    fragmentMinimumFields: 5
      * ```
     */
-    fragmentMininumFields?: number;
+    fragmentMinimumFields?: number;
   }

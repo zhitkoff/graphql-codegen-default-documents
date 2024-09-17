@@ -1,17 +1,14 @@
 import {
-  CodegenPlugin,
   PluginFunction,
   PluginValidateFn,
   Types,
   getCachedDocumentNodeFromSchema,
   oldVisit,
 } from '@graphql-codegen/plugin-helpers';
-import { GraphQLSchema, parse, printSchema, concatAST } from 'graphql';
+import { GraphQLSchema, concatAST } from 'graphql';
 import { DefaultDocsPluginConfig, DEFAULT_DOCS_TO_GENERATE } from './config';
 import { DefaultDocsVisitor } from './visitor';
 import { ProvidedDocsVisitor } from './provided-docs-visitor';
-// export * from './visitor';
-// export { DocumentsGeneratorVisitor };
 
 export const plugin: PluginFunction<DefaultDocsPluginConfig> = (
   schema: GraphQLSchema,
@@ -44,11 +41,11 @@ export const plugin: PluginFunction<DefaultDocsPluginConfig> = (
 };
 
 export const validate: PluginValidateFn<DefaultDocsPluginConfig> = async (
-  schema: GraphQLSchema,
-  documents: Types.DocumentFile[],
+  _schema: GraphQLSchema,
+  _documents: Types.DocumentFile[],
   config: DefaultDocsPluginConfig,
-  outputFile: string,
-  allPlugins: Types.ConfiguredPlugin[]
+  _outputFile: string,
+  _allPlugins: Types.ConfiguredPlugin[]
 ) => {
   if (!config.docsToGenerate.every((doc) => DEFAULT_DOCS_TO_GENERATE.includes(doc))) {
     throw new Error(`Invalid value for docsToGenerate value, please use the following values: ${DEFAULT_DOCS_TO_GENERATE.join(', ')}`);

@@ -37,7 +37,7 @@ export class ProvidedDocsVisitor {
 
   FragmentDefinition(node: FragmentDefinitionNode) {
     this.fragments.push(node.name.value);
-  } 
+  }
 
   getNames(): {queries: string[]; mutations: string[]; subscriptions: string[]; fragments: string[]} {
     return {
