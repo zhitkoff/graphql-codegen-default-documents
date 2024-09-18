@@ -1,6 +1,6 @@
 {
   "name": "graphql-codegen-default-documents",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "GraphQL Code Generator plugin for generating default documents (queries, mutations, subscriptions and 'AllFields' fragments) for your GraphQL schema.",
   "keywords": [
     "graphql",
@@ -14,7 +14,10 @@
     "fragments"
   ],
   "author": "Yury Zhytkou, zhitkoff@gmail.com",
-  "repository": "git@github.com:zhitkoff/graphql-codegen-default-documents.git",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/zhitkoff/graphql-codegen-default-documents.git"
+  },
   "license": "MIT",
   "scripts": {
     "build": "tsc -m esnext --outDir dist/esnext && tsc -m commonjs --outDir dist/commonjs",
