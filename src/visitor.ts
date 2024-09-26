@@ -19,8 +19,6 @@ import {
   InputValueDefinitionNode,
   InterfaceTypeDefinitionNode,
   isEnumType,
-  isListType,
-  isNullableType,
   isScalarType,
   ObjectTypeDefinitionNode,
 } from 'graphql';
@@ -164,15 +162,23 @@ export class DefaultDocsVisitor<
         const opsArgs = node.arguments?.map((arg) => {
           const argName = this.getName(arg);
           let argTypeName = this.getName(getBaseTypeNode(arg.type));
-          if (!isNullableType(arg.type)) {
-            if (isListType(arg.type)) {
-              argTypeName = `[${argTypeName}!]!`;
+          if (arg.type.kind === 'NonNullType') {
+            if (arg.type.type.kind === 'ListType') {
+              if (arg.type.type.type.kind === 'NonNullType') {
+                argTypeName = `[${argTypeName}!]!`;
+              } else {
+                argTypeName = `[${argTypeName}]!`;
+              }
             } else {
               argTypeName = `${argTypeName}!`;
             }
           } else {
-            if (isListType(arg.type)) {
-              argTypeName = `[${argTypeName}]`;
+            if (arg.type.kind === 'ListType') {
+              if (arg.type.type.kind === 'NonNullType') {
+                argTypeName = `[${argTypeName}!]`;
+              } else {
+                argTypeName = `[${argTypeName}]`;
+              }
             }
           }
           return '$' + `${argName}: ${argTypeName}`;
@@ -291,12 +297,7 @@ export class DefaultDocsVisitor<
             })
             .join('\n');
           return (
-            '\n' +
-            indent('... on ' + this.getName(impl.name) + ' {', i) +
-            '\n' +
-            indentMultiline(fieldsStr, i) +
-            '\n' +
-            indent('}', i)
+            '\n' + indent('... on ' + this.getName(impl.name) + ' {', i) + '\n' + indentMultiline(fieldsStr, i) + '\n' + indent('}', i)
           );
         })
         .join('\n');
