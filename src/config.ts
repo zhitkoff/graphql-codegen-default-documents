@@ -2,6 +2,7 @@ import { RawConfig } from '@graphql-codegen/visitor-plugin-common';
 
 export const DEFAULT_DOCS_TO_GENERATE = ['fragment', 'query', 'mutation', 'subscription'];
 export const DEFAULT_FRAGMENT_MINIMUM_FIELDS = 3;
+export const DEFAULT_SKIP_TYPENAME = false;
 
 export interface DefaultDocsPluginConfig extends RawConfig {
     /**
@@ -38,4 +39,21 @@ export interface DefaultDocsPluginConfig extends RawConfig {
      * ```
     */
     fragmentMinimumFields?: number;
+    /**
+     * @name fragmentMinimumFields
+     * @type boolean
+     * @description Does not add __typename to the generated types, unless it was specified in the selection set
+     * @default false
+     *
+     * @example
+     * ```yml
+     * generates:
+     * path/to/file.graphql:
+     *  plugins:
+     *    - graphql-codegen-documents
+     *  config:
+     *    skipTypename: true
+     * ```
+    */
+    skipTypename?: boolean;
   }

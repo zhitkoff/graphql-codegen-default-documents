@@ -22,7 +22,7 @@ import {
   isScalarType,
   ObjectTypeDefinitionNode,
 } from 'graphql';
-import { DefaultDocsPluginConfig, DEFAULT_DOCS_TO_GENERATE, DEFAULT_FRAGMENT_MINIMUM_FIELDS } from './config';
+import { DefaultDocsPluginConfig, DEFAULT_DOCS_TO_GENERATE, DEFAULT_FRAGMENT_MINIMUM_FIELDS, DEFAULT_SKIP_TYPENAME } from './config';
 
 // TODO - handle Unions as well
 type FieldParentNode = ObjectTypeDefinitionNode | InterfaceTypeDefinitionNode;
@@ -32,6 +32,7 @@ type FieldDefinitionPrintFn = (generateKind: string, objectTypeDefinitionParent:
 export interface DefaultDocsPluginParsedConfig {
   docsToGenerate?: string[];
   fragmentMinimumFields?: number;
+  skipTypename?: boolean;
   providedDocsNames: { queries: string[]; mutations: string[]; subscriptions: string[]; fragments: string[] };
 }
 
@@ -41,6 +42,7 @@ export class DefaultDocsVisitor<
 > {
   readonly docsToGenerate: string[];
   readonly fragmentMinimumFields: number;
+  readonly skipTypename: boolean;
   schema: GraphQLSchema;
   typeMap: { [name: string]: GraphQLType };
   Query: GraphQLObjectType;
@@ -55,6 +57,7 @@ export class DefaultDocsVisitor<
   constructor(schema: GraphQLSchema, rawConfig: TRawConfig, additionalConfig: Partial<TParsedConfig> = {}) {
     this.docsToGenerate = rawConfig.docsToGenerate || DEFAULT_DOCS_TO_GENERATE;
     this.fragmentMinimumFields = rawConfig.fragmentMinimumFields || DEFAULT_FRAGMENT_MINIMUM_FIELDS;
+    this.skipTypename = rawConfig.skipTypename || DEFAULT_SKIP_TYPENAME;
     this.schema = schema;
     this.typeMap = schema.getTypeMap();
     this.Query = schema.getQueryType();
@@ -126,15 +129,15 @@ export class DefaultDocsVisitor<
           if (this.ignoredFragmentsMap[fragmentName]) {
             return '';
           }
-          return (
-            `fragment ${fragmentName} on ${name} {\n` +
+          const __typename = this.skipTypename ? '' : '\n' + indent('__typename', 1);
+          return `fragment ${fragmentName} on ${name} {\n` +
             (node.fields as unknown as FieldDefinitionPrintFn[])
               .map((f) => {
                 return f('fragment', parent);
               })
-              .join('\n') +
-            `\n}`
-          );
+              .join('\n') + 
+              __typename +
+            `\n}\n`;
         } else {
           return '';
         }
@@ -270,12 +273,15 @@ export class DefaultDocsVisitor<
       // print out the object type fields (or 'AllFields' fragment for it)
       return `${subtype ? indent(nodeName, i) : ''}` + '{\n' + indentMultiline(fieldsStr, i) + '\n' + indent('}', i);
     } else if (this.isInterfaceTypeDefinitionNode(baseTypeDefNode)) {
+      const __typename = this.skipTypename ? '' : '\n' + indent('__typename', subtype ? i + 1 : i);
       const coreInterfaceFields = baseTypeDefNode.fields;
-      const coreInterfaceFieldsStr = coreInterfaceFields
-        .map((f) => {
-          return this.printBaseNodeFields(f, true, objectTypeDefinitionParent, fieldDefinitionParent, subtype ? i + 1 : i);
-        })
-        .join('\n');
+      const coreInterfaceFieldsStr =
+        coreInterfaceFields
+          .map((f) => {
+            return this.printBaseNodeFields(f, true, objectTypeDefinitionParent, fieldDefinitionParent, subtype ? i + 1 : i);
+          })
+          .join('\n') +
+          __typename;
       // Get all object types that implement the interface
       const implTypes = this.schema.getImplementations(gqlBaseType as GraphQLInterfaceType).objects.map((o) => {
         const implType: FieldParentNode = objectTypeDefinitionParent.find(
