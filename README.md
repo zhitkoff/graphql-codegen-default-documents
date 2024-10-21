@@ -27,7 +27,7 @@ const config = {
     'path/to/generated-docs.graphql': {
        plugins: [ 'graphql-codegen-default-documents' ],
        config: {
-        docsToGenerate: [ 'fragment', 'query', 'mutation', 'subscription' ]
+        docsToGenerate: [ 'fragment', 'query', 'mutation', 'subscription' ],
         fragmentMinimumFields: 5,
         skipTypename: false
        },
