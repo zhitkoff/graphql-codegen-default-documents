@@ -1,11 +1,3 @@
-/*
- Copyright (C) 2024 Kepler Technologies, LLC - All Rights Reserved
- You may use, distribute and modify this code under the
- terms of the Emray license agreement.
- You should have received a copy of the Emray license agreement with
- this file. If not, please visit https://emray.health
-*/
-
 import type { CodegenConfig } from '@graphql-codegen/cli';
 
 const config: CodegenConfig = {
