@@ -1,3 +1,6 @@
+/*
+ Generates default documents (queries, mutations, subscriptions and 'AllFields' fragments) from the schema
+*/
 import type { CodegenConfig } from '@graphql-codegen/cli';
 
 const config: CodegenConfig = {

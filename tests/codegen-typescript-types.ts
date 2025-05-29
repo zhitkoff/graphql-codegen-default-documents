@@ -1,3 +1,6 @@
+/*
+ Generates typescript types from the schema and custom queries
+*/
 import type { CodegenConfig } from '@graphql-codegen/cli';
 
 const config: CodegenConfig = {
