@@ -114,11 +114,13 @@ export class DefaultDocsVisitor<
           return '';
         }
         // Operations
-        return (node.fields as unknown as FieldDefinitionPrintFn[])
-          .map((f) => {
-            return f(name.toLowerCase(), parent);
-          })
-          .join('\n\n') + '\n';
+        return (
+          (node.fields as unknown as FieldDefinitionPrintFn[])
+            .map((f) => {
+              return f(name.toLowerCase(), parent);
+            })
+            .join('\n\n') + '\n'
+        );
       default:
         // All other Object types - build 'AllFields' fragment for it
         if (this.docsToGenerate.includes('fragment')) {
@@ -216,6 +218,7 @@ export class DefaultDocsVisitor<
           opsArgsString +
           ' {\n' +
           indent(name + resolverArgsString, 1) +
+          ' ' +
           baseNodeFieldsString +
           '\n}'
         );
@@ -311,16 +314,16 @@ export class DefaultDocsVisitor<
                 return this.printBaseNodeFields(f, true, objectTypeDefinitionParent, fieldDefinitionParent, subtype ? i + 2 : i);
               })
               .join('\n');
-            return (
-              indent('... on ' + this.getName(impl.name) + ' {', i) + '\n' + indentMultiline(fieldsStr, i) + '\n' + indent('}', i)
-            );
+            return indent('... on ' + this.getName(impl.name) + ' {', i) + '\n' + indentMultiline(fieldsStr, i) + '\n' + indent('}', i);
           })
           .join('\n');
         return (
           `${subtype ? indent(nodeName, i) : ''}` +
           '{\n' +
-          indentMultiline(coreInterfaceFieldsStr, i) + '\n' +
-          indentMultiline(implementationsStr, i) + '\n' +
+          indentMultiline(coreInterfaceFieldsStr, i) +
+          '\n' +
+          indentMultiline(implementationsStr, i) +
+          '\n' +
           indent('}', i)
         );
       }
@@ -340,9 +343,7 @@ export class DefaultDocsVisitor<
                   return this.printBaseNodeFields(f, true, objectTypeDefinitionParent, fieldDefinitionParent, subtype ? i + 1 : i);
                 })
                 .join('\n');
-              return (
-                indent('... on ' + this.getName(t.name) + ' {', i) + '\n' + indentMultiline(fieldsStr, i) + '\n' + indent('}', i)
-              );
+              return indent('... on ' + this.getName(t.name) + ' {', i) + '\n' + indentMultiline(fieldsStr, i) + '\n' + indent('}', i);
             })
             .join('\n') + _typeName;
         return `${subtype ? indent(nodeName, i) : ''}` + '{\n' + indentMultiline(unionStr, i) + '\n' + indent('}', i);

@@ -32,19 +32,19 @@ fragment FruitAllFields on Fruit {
 }
 
 mutation CreateOrder($items: [OrderItemInput!]!, $vendorId: ID!) {
-  createOrder(items: $items, vendorId: $vendorId){
+  createOrder(items: $items, vendorId: $vendorId) {
     ...OrderAllFields
   }
 }
 
 mutation DeleteOrder($id: ID!) {
-  deleteOrder(id: $id){
+  deleteOrder(id: $id) {
     ...OrderAllFields
   }
 }
 
 mutation UpdateOrder($id: ID!, $items: [OrderItemInput!]!) {
-  updateOrder(id: $id, items: $items){
+  updateOrder(id: $id, items: $items) {
     ...OrderAllFields
   }
 }
@@ -100,31 +100,31 @@ fragment OrderItemAllFields on OrderItem {
 }
 
 query Coupons {
-  coupons{
+  coupons {
     ...CouponAllFields
   }
 }
 
 query Discounts {
-  discounts{
+  discounts {
     ...DiscountAllFields
   }
 }
 
 query Fruits {
-  fruits{
+  fruits {
     ...FruitAllFields
   }
 }
 
 query Orders {
-  orders{
+  orders {
     ...OrderAllFields
   }
 }
 
 query Produce {
-  produce{
+  produce {
     id
     name
     nutrients
@@ -143,12 +143,12 @@ query Produce {
 }
 
 query Stalls {
-  stalls{
+  stalls {
     ...StallAllFields
   }
 }
 
-## Skipped query Vegetables since it is provided in custom documents
+## Skipped query Vegetables since it is already defined in provided documents
 
 fragment StallAllFields on Stall {
   availableProduce  {
