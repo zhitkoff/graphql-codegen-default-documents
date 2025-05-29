@@ -1,6 +1,6 @@
 # graphql-codegen-default-documents
 
-Plugin for graphql-codegen to generate default documents, such as operations (queries, mutations, subscriptions) as well as 'AllFields' fragments for defined types from your GraphQL schema. Supports all fields types: Scalars, Enums, Object Types, as well as Abstract Types (Unions and Interfaces).
+Plugin for graphql-codegen to generate default documents, such as operations (queries, mutations, subscriptions) as well as 'AllFields' fragments for defined types from your GraphQL schema. Supports all fields types, including unions and interfaces.
 
 ## Installation
 
