@@ -75,4 +75,3 @@ Inspired by <https://github.com/argano/graphql-codegen-documents>
 ## TODO
 
 - Test cases
-- More examples in README
