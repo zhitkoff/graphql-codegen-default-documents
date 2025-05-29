@@ -40,7 +40,7 @@ export interface DefaultDocsPluginConfig extends RawConfig {
     */
     fragmentMinimumFields?: number;
     /**
-     * @name fragmentMinimumFields
+     * @name skipTypename
      * @type boolean
      * @description Does not add __typename to the generated types, unless it was specified in the selection set
      * @default false

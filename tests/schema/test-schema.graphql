@@ -1,0 +1,89 @@
+interface Produce {
+  id: ID!
+  name: String!
+  quantity: Int!
+  price: Int!
+  nutrients: [String]
+}
+
+type Fruit implements Produce {
+  id: ID!
+  name: String!
+  quantity: Int!
+  price: Int!
+  nutrients: [String]
+  isSeedless: Boolean
+  ripenessIndicators: [String]  
+}
+
+type Vegetable implements Produce {
+  id: ID!
+  name: String!
+  quantity: Int!
+  price: Int!
+  nutrients: [String]
+  vegetableFamily: String
+  isPickled: Boolean
+}
+
+union Offer = Discount | Coupon 
+
+type Discount {
+  id: ID!
+  code: String!
+  percent: Float!
+  description: String
+  qualifications: [String]
+}
+
+type Coupon {
+  id: ID!
+  code: String!
+  description: String
+  amount: Float!
+}
+
+type Order {
+  id: ID!
+  vendor: Stall!
+  items: [OrderItem!]!
+  orderOffer: Offer
+}
+
+type Stall {
+  id: ID!
+  name: String!
+  stallNumber: String!
+  availableProduce: [Produce!]!
+}
+
+type OrderItem {
+  id: ID!
+  quantity: Int!
+  price: Int!
+  produce: Produce!
+}
+
+input OrderItemInput {
+  quantity: Int!
+  price: Int!
+  produce: ID!
+}
+
+type Query {
+  stalls: [Stall!]
+  orders: [Order!]
+  produce: [Produce!]
+  fruits: [Fruit!]
+  vegetables: [Vegetable!]
+  discounts: [Discount!]
+  coupons: [Coupon!]
+}
+
+type Mutation {
+  createOrder(vendorId: ID!, items: [OrderItemInput!]!): Order!
+  updateOrder(id: ID!, items: [OrderItemInput!]!): Order!
+  deleteOrder(id: ID!): Order! 
+}
+
+

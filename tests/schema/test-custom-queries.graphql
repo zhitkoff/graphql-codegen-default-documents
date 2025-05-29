@@ -1,0 +1,10 @@
+# Custom Queries
+# Must be excluded from generated default documents
+query Vegetables {
+  vegetables {
+    id
+    name
+    quantity
+    price
+  }
+}

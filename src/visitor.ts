@@ -20,12 +20,13 @@ import {
   InterfaceTypeDefinitionNode,
   isEnumType,
   isScalarType,
+  Kind,
   ObjectTypeDefinitionNode,
+  UnionTypeDefinitionNode,
 } from 'graphql';
 import { DefaultDocsPluginConfig, DEFAULT_DOCS_TO_GENERATE, DEFAULT_FRAGMENT_MINIMUM_FIELDS, DEFAULT_SKIP_TYPENAME } from './config';
 
-// TODO - handle Unions as well
-type FieldParentNode = ObjectTypeDefinitionNode | InterfaceTypeDefinitionNode;
+type FieldParentNode = ObjectTypeDefinitionNode | InterfaceTypeDefinitionNode | UnionTypeDefinitionNode;
 
 type FieldDefinitionPrintFn = (generateKind: string, objectTypeDefinitionParent: any) => string | null;
 
@@ -72,7 +73,7 @@ export class DefaultDocsVisitor<
     autoBind(this as any);
   }
 
-  // These definitions must be specifically dropped when visited as we are currently not processing them
+  // These definitions must be specifically dropped when visited as we are not processing them
   InterfaceTypeDefinition(node: InterfaceTypeDefinitionNode) {
     return null;
   }
@@ -97,7 +98,8 @@ export class DefaultDocsVisitor<
 
   // Main entry point
   ObjectTypeDefinition(node: ObjectTypeDefinitionNode, key: number | string, parent: any): string {
-    // TODO should we really skip all object types without fields?
+    // Skip all object types without fields
+    // Technically this should not happen in a valid schema
     if (!node.fields) {
       return '';
     }
@@ -116,7 +118,7 @@ export class DefaultDocsVisitor<
           .map((f) => {
             return f(name.toLowerCase(), parent);
           })
-          .join('\n');
+          .join('\n\n') + '\n';
       default:
         // All other Object types - build 'AllFields' fragment for it
         if (this.docsToGenerate.includes('fragment')) {
@@ -127,17 +129,19 @@ export class DefaultDocsVisitor<
           const fragmentName = `${name}AllFields`;
           // Skip ignored fragments (provided in custom documents to the plugin) to avoid name conflicts
           if (this.ignoredFragmentsMap[fragmentName]) {
-            return '';
+            return '## Skipped fragment ' + fragmentName + ' since it is already defined in provided documents';
           }
-          const __typename = this.skipTypename ? '' : '\n' + indent('__typename', 1);
-          return `fragment ${fragmentName} on ${name} {\n` +
+          const _typeName = this.skipTypename ? '' : '\n' + indent('__typename', 1);
+          return (
+            `fragment ${fragmentName} on ${name} {\n` +
             (node.fields as unknown as FieldDefinitionPrintFn[])
               .map((f) => {
                 return f('fragment', parent);
               })
-              .join('\n') + 
-              __typename +
-            `\n}\n`;
+              .join('\n') +
+            _typeName +
+            `\n}\n`
+          );
         } else {
           return '';
         }
@@ -159,7 +163,7 @@ export class DefaultDocsVisitor<
         // Skip ignored operations (provided in custom documents to the plugin) to avoid name conflicts
         // Skipping ignored fragments is handled in ObjectTypeDefinition
         if (this.skipIgnoredOperations(generateKind, camelCaseName)) {
-          return '';
+          return '## Skipped ' + generateKind + ' ' + camelCaseName + ' since it is already defined in provided documents';
         }
         // Operation field - query, mutation, subscription
         const opsArgs = node.arguments?.map((arg) => {
@@ -234,7 +238,7 @@ export class DefaultDocsVisitor<
   }
 
   // Recursively print fields of FieldDefinitionNode
-  // Expand fields of subtypes/interfaces unless using 'AllFields' fragment
+  // Expand fields of subtypes (including interfaces and unions) unless using 'AllFields' fragment
   private printBaseNodeFields(
     node: FieldDefinitionNode,
     subtype: boolean,
@@ -246,84 +250,106 @@ export class DefaultDocsVisitor<
     const baseNodeTypeName = this.getName(baseTypeNode);
     const nodeName = this.getName(node);
     const gqlBaseType = this.typeMap[baseNodeTypeName] as GraphQLType;
+    const _typeName = this.skipTypename ? '' : '\n' + indent('__typename', subtype ? i + 1 : i);
 
     if (isScalarType(gqlBaseType) || isEnumType(gqlBaseType)) {
       return subtype ? indent(nodeName, i) : '';
     }
 
     const baseTypeDefNode: FieldParentNode = objectTypeDefinitionParent.find(
-      (n: any) => (n.kind === 'ObjectTypeDefinition' || 'InterfaceTypeDefinition') && this.getName(n) === baseNodeTypeName
+      (n: any) =>
+        (n.kind === Kind.OBJECT_TYPE_DEFINITION || n.kind === Kind.INTERFACE_TYPE_DEFINITION || n.kind === Kind.UNION_TYPE_DEFINITION) &&
+        this.getName(n) === baseNodeTypeName
     );
 
-    if (this.isObjectTypeDefinitionNode(baseTypeDefNode)) {
-      const fields = baseTypeDefNode.fields;
-      // check if fragment is requested and print baseTypeName+AllFields on object type field instead of unfolding it
-      const expandSubTypes =
-        !this.docsToGenerate.includes('fragment') ||
-        (this.docsToGenerate.includes('fragment') && Object.keys(fields).length < this.fragmentMinimumFields);
+    switch (baseTypeDefNode.kind) {
+      case Kind.OBJECT_TYPE_DEFINITION: {
+        const fields = baseTypeDefNode.fields;
+        // check if fragment is requested and print baseTypeName+AllFields on object type field instead of unfolding it
+        const expandSubTypes =
+          !this.docsToGenerate.includes('fragment') ||
+          (this.docsToGenerate.includes('fragment') && Object.keys(fields).length < this.fragmentMinimumFields);
 
-      const fieldsStr = expandSubTypes
-        ? fields
+        const fieldsStr = expandSubTypes
+          ? fields
+              .map((f) => {
+                return this.printBaseNodeFields(f, true, objectTypeDefinitionParent, fieldDefinitionParent, subtype ? i + 1 : i);
+              })
+              .join('\n')
+          : indent(`...${baseNodeTypeName}AllFields`, i);
+
+        // print out the object type fields (or 'AllFields' fragment for it)
+        return `${subtype ? indent(nodeName, i) : ''}` + '{\n' + indentMultiline(fieldsStr, i) + '\n' + indent('}', i);
+      }
+      case Kind.INTERFACE_TYPE_DEFINITION: {
+        const coreInterfaceFields = baseTypeDefNode.fields;
+        const coreInterfaceFieldsStr =
+          coreInterfaceFields
             .map((f) => {
               return this.printBaseNodeFields(f, true, objectTypeDefinitionParent, fieldDefinitionParent, subtype ? i + 1 : i);
             })
-            .join('\n')
-        : indent(`...${baseNodeTypeName}AllFields`, i);
-
-      // print out the object type fields (or 'AllFields' fragment for it)
-      return `${subtype ? indent(nodeName, i) : ''}` + '{\n' + indentMultiline(fieldsStr, i) + '\n' + indent('}', i);
-    } else if (this.isInterfaceTypeDefinitionNode(baseTypeDefNode)) {
-      const __typename = this.skipTypename ? '' : '\n' + indent('__typename', subtype ? i + 1 : i);
-      const coreInterfaceFields = baseTypeDefNode.fields;
-      const coreInterfaceFieldsStr =
-        coreInterfaceFields
-          .map((f) => {
-            return this.printBaseNodeFields(f, true, objectTypeDefinitionParent, fieldDefinitionParent, subtype ? i + 1 : i);
+            .join('\n') + _typeName;
+        // Get all object types that implement the interface
+        const implTypes = this.schema.getImplementations(gqlBaseType as GraphQLInterfaceType).objects.map((o) => {
+          const implType: FieldParentNode = objectTypeDefinitionParent.find(
+            (n: any) =>
+              (n.kind === Kind.OBJECT_TYPE_DEFINITION || n.kind === Kind.INTERFACE_TYPE_DEFINITION) &&
+              this.getName(n) === this.getName(o.astNode)
+          );
+          return implType;
+        });
+        // Build implementations string
+        const implementationsStr = implTypes
+          .map((impl: InterfaceTypeDefinitionNode | ObjectTypeDefinitionNode) => {
+            const implTypeFields = impl.fields;
+            const extraImplFields = implTypeFields.filter(
+              (f) => !coreInterfaceFields.find((cf) => this.getName(cf.name) === this.getName(f.name))
+            );
+            // Always expand subtypes for interfaces
+            const fieldsStr = extraImplFields
+              .map((f) => {
+                return this.printBaseNodeFields(f, true, objectTypeDefinitionParent, fieldDefinitionParent, subtype ? i + 2 : i);
+              })
+              .join('\n');
+            return (
+              indent('... on ' + this.getName(impl.name) + ' {', i) + '\n' + indentMultiline(fieldsStr, i) + '\n' + indent('}', i)
+            );
           })
-          .join('\n') +
-          __typename;
-      // Get all object types that implement the interface
-      const implTypes = this.schema.getImplementations(gqlBaseType as GraphQLInterfaceType).objects.map((o) => {
-        const implType: FieldParentNode = objectTypeDefinitionParent.find(
-          (n: any) => (n.kind === 'ObjectTypeDefinition' || 'InterfaceTypeDefinition') && this.getName(n) === this.getName(o.astNode)
+          .join('\n');
+        return (
+          `${subtype ? indent(nodeName, i) : ''}` +
+          '{\n' +
+          indentMultiline(coreInterfaceFieldsStr, i) + '\n' +
+          indentMultiline(implementationsStr, i) + '\n' +
+          indent('}', i)
         );
-        return implType;
-      });
-      // Build implementations string
-      const implementationsStr = implTypes
-        .map((impl) => {
-          const implTypeFields = impl.fields;
-          const extraImplFields = implTypeFields.filter(
-            (f) => !coreInterfaceFields.find((cf) => this.getName(cf.name) === this.getName(f.name))
-          );
-          // Always expand subtypes for interfaces
-          const fieldsStr = extraImplFields
-            .map((f) => {
-              return this.printBaseNodeFields(f, true, objectTypeDefinitionParent, fieldDefinitionParent, subtype ? i + 2 : i);
+      }
+      case Kind.UNION_TYPE_DEFINITION: {
+        const unionMemberTypes = baseTypeDefNode.types;
+        // Build union string
+        const unionStr =
+          unionMemberTypes
+            .map((t) => {
+              // Union member types can only be Object Types
+              const memberTypeDefinitionNode: ObjectTypeDefinitionNode = objectTypeDefinitionParent.find(
+                (n: any) => n.kind === Kind.OBJECT_TYPE_DEFINITION && this.getName(n) === this.getName(t.name)
+              );
+              const fields = memberTypeDefinitionNode.fields;
+              const fieldsStr = fields
+                .map((f) => {
+                  return this.printBaseNodeFields(f, true, objectTypeDefinitionParent, fieldDefinitionParent, subtype ? i + 1 : i);
+                })
+                .join('\n');
+              return (
+                indent('... on ' + this.getName(t.name) + ' {', i) + '\n' + indentMultiline(fieldsStr, i) + '\n' + indent('}', i)
+              );
             })
-            .join('\n');
-          return (
-            '\n' + indent('... on ' + this.getName(impl.name) + ' {', i) + '\n' + indentMultiline(fieldsStr, i) + '\n' + indent('}', i)
-          );
-        })
-        .join('\n');
-      return (
-        `${subtype ? indent(nodeName, i) : ''}` +
-        '{\n' +
-        indentMultiline(coreInterfaceFieldsStr, i) +
-        indentMultiline(implementationsStr, i) +
-        '\n' +
-        indent('}', i)
-      );
-    } else {
-      return '';
+            .join('\n') + _typeName;
+        return `${subtype ? indent(nodeName, i) : ''}` + '{\n' + indentMultiline(unionStr, i) + '\n' + indent('}', i);
+      }
+      default:
+        return '';
     }
-  }
-  private isObjectTypeDefinitionNode(node: FieldParentNode) {
-    return !!node && node.kind === 'ObjectTypeDefinition';
-  }
-  private isInterfaceTypeDefinitionNode(node: FieldParentNode) {
-    return !!node && node.kind === 'InterfaceTypeDefinition';
   }
 
   private getNodeComment(node: FieldDefinitionNode | EnumValueDefinitionNode | InputValueDefinitionNode): string {
