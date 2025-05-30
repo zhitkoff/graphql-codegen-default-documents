@@ -4,30 +4,30 @@
 ## 
 
 fragment CouponAllFields on Coupon {
-  amount  
-  code  
-  description  
-  id  
+  amount
+  code
+  description
+  id
   __typename
 }
 
 fragment DiscountAllFields on Discount {
-  code  
-  description  
-  id  
-  percent  
-  qualifications  
+  code
+  description
+  id
+  percent
+  qualifications
   __typename
 }
 
 fragment FruitAllFields on Fruit {
-  id  
-  isSeedless  
-  name  
-  nutrients  
-  price  
-  quantity  
-  ripenessIndicators  
+  id
+  isSeedless
+  name
+  nutrients
+  price
+  quantity
+  ripenessIndicators
   __typename
 }
 
@@ -50,11 +50,11 @@ mutation UpdateOrder($id: ID!, $items: [OrderItemInput!]!) {
 }
 
 fragment OrderAllFields on Order {
-  id  
-  items  {
+  id
+  items {
     ...OrderItemAllFields
   }
-  orderOffer  {
+  orderOffer {
     ... on Coupon {
       amount
       code
@@ -70,16 +70,16 @@ fragment OrderAllFields on Order {
     }
     __typename
   }
-  vendor  {
+  vendor {
     ...StallAllFields
   }
   __typename
 }
 
 fragment OrderItemAllFields on OrderItem {
-  id  
-  price  
-  produce  {
+  id
+  price
+  produce {
     id
     name
     nutrients
@@ -95,7 +95,7 @@ fragment OrderItemAllFields on OrderItem {
       vegetableFamily
     }
   }
-  quantity  
+  quantity
   __typename
 }
 
@@ -151,7 +151,7 @@ query Stalls {
 ## Skipped query Vegetables since it is already defined in provided documents
 
 fragment StallAllFields on Stall {
-  availableProduce  {
+  availableProduce {
     id
     name
     nutrients
@@ -167,19 +167,25 @@ fragment StallAllFields on Stall {
       vegetableFamily
     }
   }
-  id  
-  name  
-  stallNumber  
+  id
+  name
+  stallNumber
   __typename
 }
 
+subscription Order {
+  order {
+    ...OrderAllFields
+  }
+}
+
 fragment VegetableAllFields on Vegetable {
-  id  
-  isPickled  
-  name  
-  nutrients  
-  price  
-  quantity  
-  vegetableFamily  
+  id
+  isPickled
+  name
+  nutrients
+  price
+  quantity
+  vegetableFamily
   __typename
 }

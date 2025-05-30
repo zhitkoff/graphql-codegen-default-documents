@@ -86,4 +86,8 @@ type Mutation {
   deleteOrder(id: ID!): Order! 
 }
 
+type Subscription {
+  order: Order!
+}
+
 

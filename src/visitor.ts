@@ -126,7 +126,7 @@ export class DefaultDocsVisitor<
         if (this.docsToGenerate.includes('fragment')) {
           // Do not generate AllFields fragment for types with less than fragmentMinimumFields fields
           if (node.fields.length < this.fragmentMinimumFields) {
-            return '';
+            return null;
           }
           const fragmentName = `${name}AllFields`;
           // Skip ignored fragments (provided in custom documents to the plugin) to avoid name conflicts
@@ -145,7 +145,7 @@ export class DefaultDocsVisitor<
             `\n}\n`
           );
         } else {
-          return '';
+          return null;
         }
     }
   }
@@ -318,7 +318,7 @@ export class DefaultDocsVisitor<
           .join('\n');
         return (
           `${subtype ? indent(nodeName, i) : ''}` +
-          '{\n' +
+          ' {\n' +
           indentMultiline(coreInterfaceFieldsStr, i) +
           '\n' +
           indentMultiline(implementationsStr, i) +
@@ -345,7 +345,7 @@ export class DefaultDocsVisitor<
               return indent('... on ' + this.getName(t.name) + ' {', i) + '\n' + indentMultiline(fieldsStr, i) + '\n' + indent('}', i);
             })
             .join('\n') + _typeName;
-        return `${subtype ? indent(nodeName, i) : ''}` + '{\n' + indentMultiline(unionStr, i) + '\n' + indent('}', i);
+        return `${subtype ? indent(nodeName, i) : ''}` + ' {\n' + indentMultiline(unionStr, i) + '\n' + indent('}', i);
       }
       default:
         return '';

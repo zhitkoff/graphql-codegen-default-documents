@@ -118,6 +118,11 @@ export type Stall = {
   stallNumber: Scalars['String']['output'];
 };
 
+export type Subscription = {
+  __typename?: 'Subscription';
+  order: Order;
+};
+
 export type Vegetable = Produce & {
   __typename?: 'Vegetable';
   id: Scalars['ID']['output'];
@@ -690,6 +695,81 @@ export type StallAllFieldsFragment = {
   }>
 };
 
+export type OrderSubscriptionVariables = Exact<{ [key: string]: never; }>;
+
+
+export type OrderSubscriptionResult = {
+  __typename?: 'Subscription',
+  order: {
+    __typename: 'Order',
+    id: string,
+    items: Array<{
+      __typename: 'OrderItem',
+      id: string,
+      price: number,
+      quantity: number,
+      produce: {
+        __typename: 'Fruit',
+        isSeedless?: boolean | null,
+        ripenessIndicators?: Array<string | null> | null,
+        id: string,
+        name: string,
+        nutrients?: Array<string | null> | null,
+        price: number,
+        quantity: number
+      } | {
+        __typename: 'Vegetable',
+        isPickled?: boolean | null,
+        vegetableFamily?: string | null,
+        id: string,
+        name: string,
+        nutrients?: Array<string | null> | null,
+        price: number,
+        quantity: number
+      }
+    }>,
+    orderOffer?: {
+      __typename: 'Coupon',
+      amount: number,
+      code: string,
+      description?: string | null,
+      id: string
+    } | {
+      __typename: 'Discount',
+      code: string,
+      description?: string | null,
+      id: string,
+      percent: number,
+      qualifications?: Array<string | null> | null
+    } | null,
+    vendor: {
+      __typename: 'Stall',
+      id: string,
+      name: string,
+      stallNumber: string,
+      availableProduce: Array<{
+        __typename: 'Fruit',
+        isSeedless?: boolean | null,
+        ripenessIndicators?: Array<string | null> | null,
+        id: string,
+        name: string,
+        nutrients?: Array<string | null> | null,
+        price: number,
+        quantity: number
+      } | {
+        __typename: 'Vegetable',
+        isPickled?: boolean | null,
+        vegetableFamily?: string | null,
+        id: string,
+        name: string,
+        nutrients?: Array<string | null> | null,
+        price: number,
+        quantity: number
+      }>
+    }
+  }
+};
+
 export type VegetableAllFieldsFragment = {
   __typename: 'Vegetable',
   id: string,
@@ -911,6 +991,13 @@ export const Stalls = gql`
   }
 }
     ${StallAllFields}`;
+export const Order = gql`
+    subscription Order {
+  order {
+    ...OrderAllFields
+  }
+}
+    ${OrderAllFields}`;
 export const Vegetables = gql`
     query Vegetables {
   vegetables {
