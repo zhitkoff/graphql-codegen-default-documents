@@ -1,4 +1,4 @@
-# Custom Queries
+# Custom Documents
 # Must be excluded from generated default documents
 query Vegetables {
   vegetables {

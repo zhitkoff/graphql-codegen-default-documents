@@ -6,7 +6,7 @@ import type { CodegenConfig } from '@graphql-codegen/cli';
 const config: CodegenConfig = {
   overwrite: true,
   schema: ['./schema/test-schema.graphql'],
-  documents: ['./schema/test-custom-queries.graphql', './generated/default-documents.graphql'],
+  documents: ['./schema/test-custom-documents.graphql', './generated/default-documents.graphql'],
   watch: false,
   generates: {
     'generated/types.ts': {
