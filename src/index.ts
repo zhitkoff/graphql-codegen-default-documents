@@ -10,7 +10,7 @@ import { DefaultDocsPluginConfig, DEFAULT_DOCS_TO_GENERATE } from './config';
 import { DefaultDocsVisitor } from './visitor';
 import { ProvidedDocsVisitor } from './provided-docs-visitor';
 
-export const plugin: PluginFunction<DefaultDocsPluginConfig> = (
+export const plugin: PluginFunction<DefaultDocsPluginConfig, { prepend: string[], content: string }> = (
   schema: GraphQLSchema,
   documents: Types.DocumentFile[],
   config: DefaultDocsPluginConfig

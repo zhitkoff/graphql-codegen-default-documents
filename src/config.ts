@@ -21,11 +21,11 @@ export interface DefaultDocsPluginConfig extends RawConfig {
      *    docsToGenerate: [ "fragment" ]
      * ```
     */
-    docsToGenerate?: [ string ];
+    docsToGenerate?: string[];
     /**
      * @name fragmentMinimumFields
      * @type number
-     * @description Minimum number of fields a fragment must have to be included in the generated documents
+     * @description Minimum number of fields an 'AllFields' fragment must have to be included in the generated documents
      * @default 3
      *
      * @example

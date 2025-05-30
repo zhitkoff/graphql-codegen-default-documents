@@ -101,7 +101,7 @@ export class DefaultDocsVisitor<
     // Skip all object types without fields
     // Technically this should not happen in a valid schema
     if (!node.fields) {
-      return '';
+      return null;
     }
 
     const name = this.getName(node);
@@ -111,7 +111,7 @@ export class DefaultDocsVisitor<
       case 'Subscription':
         // Skip operations not listed in docsToGenerate config property
         if (!this.docsToGenerate.includes(name.toLowerCase())) {
-          return '';
+          return null;
         }
         // Operations
         return (
@@ -160,7 +160,7 @@ export class DefaultDocsVisitor<
       const comment = this.getNodeComment(node);
       if (generateKind === 'fragment') {
         const baseNodeFieldsString = this.printBaseNodeFields(node, false, objectTypeDefinitionParent, fieldDefinitionParent, 1);
-        return comment + indent(name, 1) + indent(baseNodeFieldsString, 1);
+        return comment + indent(name, 1) + baseNodeFieldsString;
       } else {
         // Skip ignored operations (provided in custom documents to the plugin) to avoid name conflicts
         // Skipping ignored fragments is handled in ObjectTypeDefinition
@@ -218,7 +218,6 @@ export class DefaultDocsVisitor<
           opsArgsString +
           ' {\n' +
           indent(name + resolverArgsString, 1) +
-          ' ' +
           baseNodeFieldsString +
           '\n}'
         );
@@ -276,13 +275,13 @@ export class DefaultDocsVisitor<
         const fieldsStr = expandSubTypes
           ? fields
               .map((f) => {
-                return this.printBaseNodeFields(f, true, objectTypeDefinitionParent, fieldDefinitionParent, subtype ? i + 1 : i);
+                return this.printBaseNodeFields(f, true, objectTypeDefinitionParent, fieldDefinitionParent, i);
               })
               .join('\n')
           : indent(`...${baseNodeTypeName}AllFields`, i);
 
         // print out the object type fields (or 'AllFields' fragment for it)
-        return `${subtype ? indent(nodeName, i) : ''}` + '{\n' + indentMultiline(fieldsStr, i) + '\n' + indent('}', i);
+        return `${subtype ? indent(nodeName, i) : ''}` + ' {\n' + indentMultiline(fieldsStr, i) + '\n' + indent('}', i);
       }
       case Kind.INTERFACE_TYPE_DEFINITION: {
         const coreInterfaceFields = baseTypeDefNode.fields;
