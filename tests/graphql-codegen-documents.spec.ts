@@ -1219,4 +1219,194 @@ subscription Order {
 "
 `);
   });
+  it('should skip __typename', async () => {
+    const config: DefaultDocsPluginConfig = {
+      docsToGenerate: ['fragment', 'query', 'mutation', 'subscription'],
+      fragmentMinimumFields: 3,
+      skipTypename: true,
+    };
+    const { content } = await plugin(dummyUserTestSchema, [], config, { outputFile: '' });
+    expect(content).toMatchInlineSnapshot(`
+"fragment FruitAllFields on Fruit {
+  id
+  name
+  quantity
+  price
+  nutrients
+  isSeedless
+  ripenessIndicators
+}
+
+fragment VegetableAllFields on Vegetable {
+  id
+  name
+  quantity
+  price
+  nutrients
+  vegetableFamily
+  isPickled
+}
+
+fragment DiscountAllFields on Discount {
+  id
+  code
+  percent
+  description
+  qualifications
+}
+
+fragment CouponAllFields on Coupon {
+  id
+  code
+  description
+  amount
+}
+
+fragment OrderAllFields on Order {
+  id
+  vendor {
+    ...StallAllFields
+  }
+  items {
+    ...OrderItemAllFields
+  }
+  orderOffer {
+    ... on Discount {
+      id
+      code
+      percent
+      description
+      qualifications
+    }
+    ... on Coupon {
+      id
+      code
+      description
+      amount
+    }
+  }
+}
+
+fragment StallAllFields on Stall {
+  id
+  name
+  stallNumber
+  availableProduce {
+    id
+    name
+    quantity
+    price
+    nutrients
+    ... on Fruit {
+      isSeedless
+      ripenessIndicators
+    }
+    ... on Vegetable {
+      vegetableFamily
+      isPickled
+    }
+  }
+}
+
+fragment OrderItemAllFields on OrderItem {
+  id
+  quantity
+  price
+  produce {
+    id
+    name
+    quantity
+    price
+    nutrients
+    ... on Fruit {
+      isSeedless
+      ripenessIndicators
+    }
+    ... on Vegetable {
+      vegetableFamily
+      isPickled
+    }
+  }
+}
+
+query Stalls {
+  stalls {
+    ...StallAllFields
+  }
+}
+
+query Orders {
+  orders {
+    ...OrderAllFields
+  }
+}
+
+query Produce {
+  produce {
+    id
+    name
+    quantity
+    price
+    nutrients
+    ... on Fruit {
+      isSeedless
+      ripenessIndicators
+    }
+    ... on Vegetable {
+      vegetableFamily
+      isPickled
+    }
+  }
+}
+
+query Fruits {
+  fruits {
+    ...FruitAllFields
+  }
+}
+
+query Vegetables {
+  vegetables {
+    ...VegetableAllFields
+  }
+}
+
+query Discounts {
+  discounts {
+    ...DiscountAllFields
+  }
+}
+
+query Coupons {
+  coupons {
+    ...CouponAllFields
+  }
+}
+
+mutation CreateOrder($vendorId: ID!, $items: [OrderItemInput!]!) {
+  createOrder(vendorId: $vendorId, items: $items) {
+    ...OrderAllFields
+  }
+}
+
+mutation UpdateOrder($id: ID!, $items: [OrderItemInput!]!) {
+  updateOrder(id: $id, items: $items) {
+    ...OrderAllFields
+  }
+}
+
+mutation DeleteOrder($id: ID!) {
+  deleteOrder(id: $id) {
+    ...OrderAllFields
+  }
+}
+
+subscription Order {
+  order {
+    ...OrderAllFields
+  }
+}
+"
+`);
+  });
 });
