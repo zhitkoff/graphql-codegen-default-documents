@@ -131,6 +131,7 @@ describe('Process Schema', () => {
     expect(content).toMatchInlineSnapshot(`
 "fragment FruitAllFields on Fruit {
   id
+  oldFieldWithDescription
   name
   quantity
   price
@@ -142,6 +143,7 @@ describe('Process Schema', () => {
 
 fragment VegetableAllFields on Vegetable {
   id
+  oldName
   name
   quantity
   price
@@ -153,6 +155,7 @@ fragment VegetableAllFields on Vegetable {
 
 fragment DiscountAllFields on Discount {
   id
+  oldFieldWithoutDescription
   code
   percent
   description
@@ -179,6 +182,7 @@ fragment OrderAllFields on Order {
   orderOffer {
     ... on Discount {
       id
+      oldFieldWithoutDescription
       code
       percent
       description
@@ -207,10 +211,12 @@ fragment StallAllFields on Stall {
     nutrients
     __typename
     ... on Fruit {
+      oldFieldWithDescription
       isSeedless
       ripenessIndicators
     }
     ... on Vegetable {
+      oldName
       vegetableFamily
       isPickled
     }
@@ -230,10 +236,12 @@ fragment OrderItemAllFields on OrderItem {
     nutrients
     __typename
     ... on Fruit {
+      oldFieldWithDescription
       isSeedless
       ripenessIndicators
     }
     ... on Vegetable {
+      oldName
       vegetableFamily
       isPickled
     }
@@ -254,6 +262,7 @@ fragment OrderItemAllFields on OrderItem {
     expect(content).toMatchInlineSnapshot(`
 "fragment FruitAllFields on Fruit {
   id
+  oldFieldWithDescription
   name
   quantity
   price
@@ -265,12 +274,23 @@ fragment OrderItemAllFields on OrderItem {
 
 fragment VegetableAllFields on Vegetable {
   id
+  oldName
   name
   quantity
   price
   nutrients
   vegetableFamily
   isPickled
+  __typename
+}
+
+fragment DiscountAllFields on Discount {
+  id
+  oldFieldWithoutDescription
+  code
+  percent
+  description
+  qualifications
   __typename
 }
 "
@@ -298,10 +318,12 @@ fragment VegetableAllFields on Vegetable {
         nutrients
         __typename
       ... on Fruit {
+            oldFieldWithDescription
             isSeedless
             ripenessIndicators
       }
       ... on Vegetable {
+            oldName
             vegetableFamily
             isPickled
       }
@@ -324,10 +346,12 @@ query Orders {
           nutrients
           __typename
         ... on Fruit {
+              oldFieldWithDescription
               isSeedless
               ripenessIndicators
         }
         ... on Vegetable {
+              oldName
               vegetableFamily
               isPickled
         }
@@ -345,10 +369,12 @@ query Orders {
           nutrients
           __typename
         ... on Fruit {
+              oldFieldWithDescription
               isSeedless
               ripenessIndicators
         }
         ... on Vegetable {
+              oldName
               vegetableFamily
               isPickled
         }
@@ -357,6 +383,7 @@ query Orders {
     orderOffer {
       ... on Discount {
           id
+          oldFieldWithoutDescription
           code
           percent
           description
@@ -382,10 +409,12 @@ query Produce {
     nutrients
     __typename
     ... on Fruit {
+      oldFieldWithDescription
       isSeedless
       ripenessIndicators
     }
     ... on Vegetable {
+      oldName
       vegetableFamily
       isPickled
     }
@@ -395,6 +424,7 @@ query Produce {
 query Fruits {
   fruits {
     id
+    oldFieldWithDescription
     name
     quantity
     price
@@ -407,6 +437,7 @@ query Fruits {
 query Vegetables {
   vegetables {
     id
+    oldName
     name
     quantity
     price
@@ -419,6 +450,7 @@ query Vegetables {
 query Discounts {
   discounts {
     id
+    oldFieldWithoutDescription
     code
     percent
     description
@@ -448,6 +480,7 @@ query Coupons {
     expect(content).toMatchInlineSnapshot(`
 "fragment FruitAllFields on Fruit {
   id
+  oldFieldWithDescription
   name
   quantity
   price
@@ -459,6 +492,7 @@ query Coupons {
 
 fragment VegetableAllFields on Vegetable {
   id
+  oldName
   name
   quantity
   price
@@ -470,6 +504,7 @@ fragment VegetableAllFields on Vegetable {
 
 fragment DiscountAllFields on Discount {
   id
+  oldFieldWithoutDescription
   code
   percent
   description
@@ -496,6 +531,7 @@ fragment OrderAllFields on Order {
   orderOffer {
     ... on Discount {
       id
+      oldFieldWithoutDescription
       code
       percent
       description
@@ -524,10 +560,12 @@ fragment StallAllFields on Stall {
     nutrients
     __typename
     ... on Fruit {
+      oldFieldWithDescription
       isSeedless
       ripenessIndicators
     }
     ... on Vegetable {
+      oldName
       vegetableFamily
       isPickled
     }
@@ -547,10 +585,12 @@ fragment OrderItemAllFields on OrderItem {
     nutrients
     __typename
     ... on Fruit {
+      oldFieldWithDescription
       isSeedless
       ripenessIndicators
     }
     ... on Vegetable {
+      oldName
       vegetableFamily
       isPickled
     }
@@ -579,10 +619,12 @@ query Produce {
     nutrients
     __typename
     ... on Fruit {
+      oldFieldWithDescription
       isSeedless
       ripenessIndicators
     }
     ... on Vegetable {
+      oldName
       vegetableFamily
       isPickled
     }
@@ -626,6 +668,7 @@ query Coupons {
     expect(content).toMatchInlineSnapshot(`
 "fragment FruitAllFields on Fruit {
   id
+  oldFieldWithDescription
   name
   quantity
   price
@@ -637,12 +680,23 @@ query Coupons {
 
 fragment VegetableAllFields on Vegetable {
   id
+  oldName
   name
   quantity
   price
   nutrients
   vegetableFamily
   isPickled
+  __typename
+}
+
+fragment DiscountAllFields on Discount {
+  id
+  oldFieldWithoutDescription
+  code
+  percent
+  description
+  qualifications
   __typename
 }
 
@@ -659,10 +713,12 @@ query Stalls {
         nutrients
         __typename
       ... on Fruit {
+            oldFieldWithDescription
             isSeedless
             ripenessIndicators
       }
       ... on Vegetable {
+            oldName
             vegetableFamily
             isPickled
       }
@@ -685,10 +741,12 @@ query Orders {
           nutrients
           __typename
         ... on Fruit {
+              oldFieldWithDescription
               isSeedless
               ripenessIndicators
         }
         ... on Vegetable {
+              oldName
               vegetableFamily
               isPickled
         }
@@ -706,10 +764,12 @@ query Orders {
           nutrients
           __typename
         ... on Fruit {
+              oldFieldWithDescription
               isSeedless
               ripenessIndicators
         }
         ... on Vegetable {
+              oldName
               vegetableFamily
               isPickled
         }
@@ -718,6 +778,7 @@ query Orders {
     orderOffer {
       ... on Discount {
           id
+          oldFieldWithoutDescription
           code
           percent
           description
@@ -743,10 +804,12 @@ query Produce {
     nutrients
     __typename
     ... on Fruit {
+      oldFieldWithDescription
       isSeedless
       ripenessIndicators
     }
     ... on Vegetable {
+      oldName
       vegetableFamily
       isPickled
     }
@@ -767,11 +830,7 @@ query Vegetables {
 
 query Discounts {
   discounts {
-    id
-    code
-    percent
-    description
-    qualifications
+    ...DiscountAllFields
   }
 }
 
@@ -797,6 +856,7 @@ query Coupons {
     expect(content).toMatchInlineSnapshot(`
 "fragment FruitAllFields on Fruit {
   id
+  oldFieldWithDescription
   name
   quantity
   price
@@ -808,6 +868,7 @@ query Coupons {
 
 fragment VegetableAllFields on Vegetable {
   id
+  oldName
   name
   quantity
   price
@@ -819,6 +880,7 @@ fragment VegetableAllFields on Vegetable {
 
 fragment DiscountAllFields on Discount {
   id
+  oldFieldWithoutDescription
   code
   percent
   description
@@ -845,6 +907,7 @@ fragment OrderAllFields on Order {
   orderOffer {
     ... on Discount {
       id
+      oldFieldWithoutDescription
       code
       percent
       description
@@ -873,10 +936,12 @@ fragment StallAllFields on Stall {
     nutrients
     __typename
     ... on Fruit {
+      oldFieldWithDescription
       isSeedless
       ripenessIndicators
     }
     ... on Vegetable {
+      oldName
       vegetableFamily
       isPickled
     }
@@ -896,10 +961,12 @@ fragment OrderItemAllFields on OrderItem {
     nutrients
     __typename
     ... on Fruit {
+      oldFieldWithDescription
       isSeedless
       ripenessIndicators
     }
     ... on Vegetable {
+      oldName
       vegetableFamily
       isPickled
     }
@@ -928,10 +995,12 @@ query Produce {
     nutrients
     __typename
     ... on Fruit {
+      oldFieldWithDescription
       isSeedless
       ripenessIndicators
     }
     ... on Vegetable {
+      oldName
       vegetableFamily
       isPickled
     }
@@ -970,6 +1039,7 @@ query Coupons {
     expect(content).toMatchInlineSnapshot(`
 "fragment FruitAllFields on Fruit {
   id
+  oldFieldWithDescription
   name
   quantity
   price
@@ -981,6 +1051,7 @@ query Coupons {
 
 fragment VegetableAllFields on Vegetable {
   id
+  oldName
   name
   quantity
   price
@@ -992,6 +1063,7 @@ fragment VegetableAllFields on Vegetable {
 
 fragment DiscountAllFields on Discount {
   id
+  oldFieldWithoutDescription
   code
   percent
   description
@@ -1018,6 +1090,7 @@ fragment OrderAllFields on Order {
   orderOffer {
     ... on Discount {
       id
+      oldFieldWithoutDescription
       code
       percent
       description
@@ -1046,10 +1119,12 @@ fragment StallAllFields on Stall {
     nutrients
     __typename
     ... on Fruit {
+      oldFieldWithDescription
       isSeedless
       ripenessIndicators
     }
     ... on Vegetable {
+      oldName
       vegetableFamily
       isPickled
     }
@@ -1069,10 +1144,12 @@ fragment OrderItemAllFields on OrderItem {
     nutrients
     __typename
     ... on Fruit {
+      oldFieldWithDescription
       isSeedless
       ripenessIndicators
     }
     ... on Vegetable {
+      oldName
       vegetableFamily
       isPickled
     }
@@ -1110,6 +1187,7 @@ mutation DeleteOrder($id: ID!) {
     expect(content).toMatchInlineSnapshot(`
 "fragment FruitAllFields on Fruit {
   id
+  oldFieldWithDescription
   name
   quantity
   price
@@ -1121,6 +1199,7 @@ mutation DeleteOrder($id: ID!) {
 
 fragment VegetableAllFields on Vegetable {
   id
+  oldName
   name
   quantity
   price
@@ -1132,6 +1211,7 @@ fragment VegetableAllFields on Vegetable {
 
 fragment DiscountAllFields on Discount {
   id
+  oldFieldWithoutDescription
   code
   percent
   description
@@ -1158,6 +1238,7 @@ fragment OrderAllFields on Order {
   orderOffer {
     ... on Discount {
       id
+      oldFieldWithoutDescription
       code
       percent
       description
@@ -1186,10 +1267,12 @@ fragment StallAllFields on Stall {
     nutrients
     __typename
     ... on Fruit {
+      oldFieldWithDescription
       isSeedless
       ripenessIndicators
     }
     ... on Vegetable {
+      oldName
       vegetableFamily
       isPickled
     }
@@ -1209,10 +1292,12 @@ fragment OrderItemAllFields on OrderItem {
     nutrients
     __typename
     ... on Fruit {
+      oldFieldWithDescription
       isSeedless
       ripenessIndicators
     }
     ... on Vegetable {
+      oldName
       vegetableFamily
       isPickled
     }
@@ -1238,6 +1323,7 @@ subscription Order {
     expect(content).toMatchInlineSnapshot(`
 "fragment FruitAllFields on Fruit {
   id
+  oldFieldWithDescription
   name
   quantity
   price
@@ -1248,6 +1334,7 @@ subscription Order {
 
 fragment VegetableAllFields on Vegetable {
   id
+  oldName
   name
   quantity
   price
@@ -1258,6 +1345,7 @@ fragment VegetableAllFields on Vegetable {
 
 fragment DiscountAllFields on Discount {
   id
+  oldFieldWithoutDescription
   code
   percent
   description
@@ -1282,6 +1370,7 @@ fragment OrderAllFields on Order {
   orderOffer {
     ... on Discount {
       id
+      oldFieldWithoutDescription
       code
       percent
       description
@@ -1307,10 +1396,12 @@ fragment StallAllFields on Stall {
     price
     nutrients
     ... on Fruit {
+      oldFieldWithDescription
       isSeedless
       ripenessIndicators
     }
     ... on Vegetable {
+      oldName
       vegetableFamily
       isPickled
     }
@@ -1328,10 +1419,12 @@ fragment OrderItemAllFields on OrderItem {
     price
     nutrients
     ... on Fruit {
+      oldFieldWithDescription
       isSeedless
       ripenessIndicators
     }
     ... on Vegetable {
+      oldName
       vegetableFamily
       isPickled
     }
@@ -1358,10 +1451,12 @@ query Produce {
     price
     nutrients
     ... on Fruit {
+      oldFieldWithDescription
       isSeedless
       ripenessIndicators
     }
     ... on Vegetable {
+      oldName
       vegetableFamily
       isPickled
     }

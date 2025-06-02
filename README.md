@@ -1,6 +1,7 @@
 # graphql-codegen-default-documents
 
 Plugin for graphql-codegen to generate default documents, such as operations (queries, mutations, subscriptions) as well as 'AllFields' fragments for defined types from your GraphQL schema. Supports all fields types, including unions and interfaces.
+For schema-first GraphQL development, it allows to start quickly by generating default documents and type bindings that fetch all fields and then fine-tune and optimize.
 
 ## Installation
 
@@ -71,4 +72,3 @@ and run it with `graphql-codegen --config codegen-typescript.ts`.
 ## Acknowledgements
 
 Inspired by <https://github.com/argano/graphql-codegen-documents>
-

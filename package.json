@@ -1,6 +1,6 @@
 {
   "name": "graphql-codegen-default-documents",
-  "version": "0.2.1",
+  "version": "1.0.0",
   "description": "GraphQL Code Generator plugin for generating default documents (queries, mutations, subscriptions and 'AllFields' fragments) for your GraphQL schema.",
   "keywords": [
     "graphql",
