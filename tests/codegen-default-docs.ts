@@ -15,6 +15,8 @@ const config: CodegenConfig = {
         docsToGenerate: ['query', 'mutation', 'subscription', 'fragment'],
         fragmentMinimumFields: 3,
         skipTypename: false,
+        commentsFromDescriptions: true,
+        deprecatedDirectiveInComments: true,
       },
     },
   },

@@ -3,6 +3,8 @@ import { RawConfig } from '@graphql-codegen/visitor-plugin-common';
 export const DEFAULT_DOCS_TO_GENERATE = ['fragment', 'query', 'mutation', 'subscription'];
 export const DEFAULT_FRAGMENT_MINIMUM_FIELDS = 3;
 export const DEFAULT_SKIP_TYPENAME = false;
+export const DEFAULT_COMMENTS_FROM_DESCRIPTIONS = false;
+export const DEFAULT_DEPRECATED_DIRECTIVE_IN_COMMENTS = false;
 
 export interface DefaultDocsPluginConfig extends RawConfig {
     /**
@@ -56,4 +58,38 @@ export interface DefaultDocsPluginConfig extends RawConfig {
      * ```
     */
     skipTypename?: boolean;
+    /**
+     * @name commentsFromDescriptions
+     * @type boolean
+     * @description Whether to include comments generated from field descriptions
+     * @default false
+     *
+     * @example
+     * ```yml
+     * generates:
+     * path/to/file.graphql:
+     *  plugins:
+     *    - graphql-codegen-documents
+     *  config:
+     *    commentsFromDescriptions: true
+     * ```
+    */
+    commentsFromDescriptions?: boolean;
+    /**
+     * @name deprecatedDirectiveInComments
+     * @type boolean
+     * @description Whether to add deprecated directive and its reason to comments
+     * @default false
+     *
+     * @example
+     * ```yml
+     * generates:
+     * path/to/file.graphql:
+     *  plugins:
+     *    - graphql-codegen-documents
+     *  config:
+     *    deprecatedDirectiveInComments: true
+     * ```
+    */
+    deprecatedDirectiveInComments?: boolean;
   }

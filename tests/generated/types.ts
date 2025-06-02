@@ -28,6 +28,8 @@ export type Discount = {
   code: Scalars['String']['output'];
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  /** @deprecated Field no longer supported */
+  oldFieldWithoutDescription?: Maybe<Scalars['String']['output']>;
   percent: Scalars['Float']['output'];
   qualifications?: Maybe<Array<Maybe<Scalars['String']['output']>>>;
 };
@@ -38,6 +40,12 @@ export type Fruit = Produce & {
   isSeedless?: Maybe<Scalars['Boolean']['output']>;
   name: Scalars['String']['output'];
   nutrients?: Maybe<Array<Maybe<Scalars['String']['output']>>>;
+  /**
+   * one line description
+   * @deprecated Field no longer supported
+   */
+  oldFieldWithDescription?: Maybe<Scalars['String']['output']>;
+  /** Price per unit */
   price: Scalars['Int']['output'];
   quantity: Scalars['Int']['output'];
   ripenessIndicators?: Maybe<Array<Maybe<Scalars['String']['output']>>>;
@@ -129,6 +137,12 @@ export type Vegetable = Produce & {
   isPickled?: Maybe<Scalars['Boolean']['output']>;
   name: Scalars['String']['output'];
   nutrients?: Maybe<Array<Maybe<Scalars['String']['output']>>>;
+  /**
+   * multiline
+   * description
+   * @deprecated Field is no longer supported
+   */
+  oldName?: Maybe<Scalars['String']['output']>;
   price: Scalars['Int']['output'];
   quantity: Scalars['Int']['output'];
   vegetableFamily?: Maybe<Scalars['String']['output']>;
@@ -147,6 +161,7 @@ export type DiscountAllFieldsFragment = {
   code: string,
   description?: string | null,
   id: string,
+  oldFieldWithoutDescription?: string | null,
   percent: number,
   qualifications?: Array<string | null> | null
 };
@@ -157,6 +172,7 @@ export type FruitAllFieldsFragment = {
   isSeedless?: boolean | null,
   name: string,
   nutrients?: Array<string | null> | null,
+  oldFieldWithDescription?: string | null,
   price: number,
   quantity: number,
   ripenessIndicators?: Array<string | null> | null
@@ -181,6 +197,7 @@ export type CreateOrderMutationResult = {
       produce: {
         __typename: 'Fruit',
         isSeedless?: boolean | null,
+        oldFieldWithDescription?: string | null,
         ripenessIndicators?: Array<string | null> | null,
         id: string,
         name: string,
@@ -190,6 +207,7 @@ export type CreateOrderMutationResult = {
       } | {
         __typename: 'Vegetable',
         isPickled?: boolean | null,
+        oldName?: string | null,
         vegetableFamily?: string | null,
         id: string,
         name: string,
@@ -209,6 +227,7 @@ export type CreateOrderMutationResult = {
       code: string,
       description?: string | null,
       id: string,
+      oldFieldWithoutDescription?: string | null,
       percent: number,
       qualifications?: Array<string | null> | null
     } | null,
@@ -220,6 +239,7 @@ export type CreateOrderMutationResult = {
       availableProduce: Array<{
         __typename: 'Fruit',
         isSeedless?: boolean | null,
+        oldFieldWithDescription?: string | null,
         ripenessIndicators?: Array<string | null> | null,
         id: string,
         name: string,
@@ -229,6 +249,7 @@ export type CreateOrderMutationResult = {
       } | {
         __typename: 'Vegetable',
         isPickled?: boolean | null,
+        oldName?: string | null,
         vegetableFamily?: string | null,
         id: string,
         name: string,
@@ -258,6 +279,7 @@ export type DeleteOrderMutationResult = {
       produce: {
         __typename: 'Fruit',
         isSeedless?: boolean | null,
+        oldFieldWithDescription?: string | null,
         ripenessIndicators?: Array<string | null> | null,
         id: string,
         name: string,
@@ -267,6 +289,7 @@ export type DeleteOrderMutationResult = {
       } | {
         __typename: 'Vegetable',
         isPickled?: boolean | null,
+        oldName?: string | null,
         vegetableFamily?: string | null,
         id: string,
         name: string,
@@ -286,6 +309,7 @@ export type DeleteOrderMutationResult = {
       code: string,
       description?: string | null,
       id: string,
+      oldFieldWithoutDescription?: string | null,
       percent: number,
       qualifications?: Array<string | null> | null
     } | null,
@@ -297,6 +321,7 @@ export type DeleteOrderMutationResult = {
       availableProduce: Array<{
         __typename: 'Fruit',
         isSeedless?: boolean | null,
+        oldFieldWithDescription?: string | null,
         ripenessIndicators?: Array<string | null> | null,
         id: string,
         name: string,
@@ -306,6 +331,7 @@ export type DeleteOrderMutationResult = {
       } | {
         __typename: 'Vegetable',
         isPickled?: boolean | null,
+        oldName?: string | null,
         vegetableFamily?: string | null,
         id: string,
         name: string,
@@ -336,6 +362,7 @@ export type UpdateOrderMutationResult = {
       produce: {
         __typename: 'Fruit',
         isSeedless?: boolean | null,
+        oldFieldWithDescription?: string | null,
         ripenessIndicators?: Array<string | null> | null,
         id: string,
         name: string,
@@ -345,6 +372,7 @@ export type UpdateOrderMutationResult = {
       } | {
         __typename: 'Vegetable',
         isPickled?: boolean | null,
+        oldName?: string | null,
         vegetableFamily?: string | null,
         id: string,
         name: string,
@@ -364,6 +392,7 @@ export type UpdateOrderMutationResult = {
       code: string,
       description?: string | null,
       id: string,
+      oldFieldWithoutDescription?: string | null,
       percent: number,
       qualifications?: Array<string | null> | null
     } | null,
@@ -375,6 +404,7 @@ export type UpdateOrderMutationResult = {
       availableProduce: Array<{
         __typename: 'Fruit',
         isSeedless?: boolean | null,
+        oldFieldWithDescription?: string | null,
         ripenessIndicators?: Array<string | null> | null,
         id: string,
         name: string,
@@ -384,6 +414,7 @@ export type UpdateOrderMutationResult = {
       } | {
         __typename: 'Vegetable',
         isPickled?: boolean | null,
+        oldName?: string | null,
         vegetableFamily?: string | null,
         id: string,
         name: string,
@@ -406,6 +437,7 @@ export type OrderAllFieldsFragment = {
     produce: {
       __typename: 'Fruit',
       isSeedless?: boolean | null,
+      oldFieldWithDescription?: string | null,
       ripenessIndicators?: Array<string | null> | null,
       id: string,
       name: string,
@@ -415,6 +447,7 @@ export type OrderAllFieldsFragment = {
     } | {
       __typename: 'Vegetable',
       isPickled?: boolean | null,
+      oldName?: string | null,
       vegetableFamily?: string | null,
       id: string,
       name: string,
@@ -434,6 +467,7 @@ export type OrderAllFieldsFragment = {
     code: string,
     description?: string | null,
     id: string,
+    oldFieldWithoutDescription?: string | null,
     percent: number,
     qualifications?: Array<string | null> | null
   } | null,
@@ -445,6 +479,7 @@ export type OrderAllFieldsFragment = {
     availableProduce: Array<{
       __typename: 'Fruit',
       isSeedless?: boolean | null,
+      oldFieldWithDescription?: string | null,
       ripenessIndicators?: Array<string | null> | null,
       id: string,
       name: string,
@@ -454,6 +489,7 @@ export type OrderAllFieldsFragment = {
     } | {
       __typename: 'Vegetable',
       isPickled?: boolean | null,
+      oldName?: string | null,
       vegetableFamily?: string | null,
       id: string,
       name: string,
@@ -472,6 +508,7 @@ export type OrderItemAllFieldsFragment = {
   produce: {
     __typename: 'Fruit',
     isSeedless?: boolean | null,
+    oldFieldWithDescription?: string | null,
     ripenessIndicators?: Array<string | null> | null,
     id: string,
     name: string,
@@ -481,6 +518,7 @@ export type OrderItemAllFieldsFragment = {
   } | {
     __typename: 'Vegetable',
     isPickled?: boolean | null,
+    oldName?: string | null,
     vegetableFamily?: string | null,
     id: string,
     name: string,
@@ -514,6 +552,7 @@ export type DiscountsQueryResult = {
     code: string,
     description?: string | null,
     id: string,
+    oldFieldWithoutDescription?: string | null,
     percent: number,
     qualifications?: Array<string | null> | null
   }> | null
@@ -530,6 +569,7 @@ export type FruitsQueryResult = {
     isSeedless?: boolean | null,
     name: string,
     nutrients?: Array<string | null> | null,
+    oldFieldWithDescription?: string | null,
     price: number,
     quantity: number,
     ripenessIndicators?: Array<string | null> | null
@@ -552,6 +592,7 @@ export type OrdersQueryResult = {
       produce: {
         __typename: 'Fruit',
         isSeedless?: boolean | null,
+        oldFieldWithDescription?: string | null,
         ripenessIndicators?: Array<string | null> | null,
         id: string,
         name: string,
@@ -561,6 +602,7 @@ export type OrdersQueryResult = {
       } | {
         __typename: 'Vegetable',
         isPickled?: boolean | null,
+        oldName?: string | null,
         vegetableFamily?: string | null,
         id: string,
         name: string,
@@ -580,6 +622,7 @@ export type OrdersQueryResult = {
       code: string,
       description?: string | null,
       id: string,
+      oldFieldWithoutDescription?: string | null,
       percent: number,
       qualifications?: Array<string | null> | null
     } | null,
@@ -591,6 +634,7 @@ export type OrdersQueryResult = {
       availableProduce: Array<{
         __typename: 'Fruit',
         isSeedless?: boolean | null,
+        oldFieldWithDescription?: string | null,
         ripenessIndicators?: Array<string | null> | null,
         id: string,
         name: string,
@@ -600,6 +644,7 @@ export type OrdersQueryResult = {
       } | {
         __typename: 'Vegetable',
         isPickled?: boolean | null,
+        oldName?: string | null,
         vegetableFamily?: string | null,
         id: string,
         name: string,
@@ -619,6 +664,7 @@ export type ProduceQueryResult = {
   produce?: Array<{
     __typename: 'Fruit',
     isSeedless?: boolean | null,
+    oldFieldWithDescription?: string | null,
     ripenessIndicators?: Array<string | null> | null,
     id: string,
     name: string,
@@ -628,6 +674,7 @@ export type ProduceQueryResult = {
   } | {
     __typename: 'Vegetable',
     isPickled?: boolean | null,
+    oldName?: string | null,
     vegetableFamily?: string | null,
     id: string,
     name: string,
@@ -650,6 +697,7 @@ export type StallsQueryResult = {
     availableProduce: Array<{
       __typename: 'Fruit',
       isSeedless?: boolean | null,
+      oldFieldWithDescription?: string | null,
       ripenessIndicators?: Array<string | null> | null,
       id: string,
       name: string,
@@ -659,6 +707,7 @@ export type StallsQueryResult = {
     } | {
       __typename: 'Vegetable',
       isPickled?: boolean | null,
+      oldName?: string | null,
       vegetableFamily?: string | null,
       id: string,
       name: string,
@@ -677,6 +726,7 @@ export type StallAllFieldsFragment = {
   availableProduce: Array<{
     __typename: 'Fruit',
     isSeedless?: boolean | null,
+    oldFieldWithDescription?: string | null,
     ripenessIndicators?: Array<string | null> | null,
     id: string,
     name: string,
@@ -686,6 +736,7 @@ export type StallAllFieldsFragment = {
   } | {
     __typename: 'Vegetable',
     isPickled?: boolean | null,
+    oldName?: string | null,
     vegetableFamily?: string | null,
     id: string,
     name: string,
@@ -711,6 +762,7 @@ export type OrderSubscriptionResult = {
       produce: {
         __typename: 'Fruit',
         isSeedless?: boolean | null,
+        oldFieldWithDescription?: string | null,
         ripenessIndicators?: Array<string | null> | null,
         id: string,
         name: string,
@@ -720,6 +772,7 @@ export type OrderSubscriptionResult = {
       } | {
         __typename: 'Vegetable',
         isPickled?: boolean | null,
+        oldName?: string | null,
         vegetableFamily?: string | null,
         id: string,
         name: string,
@@ -739,6 +792,7 @@ export type OrderSubscriptionResult = {
       code: string,
       description?: string | null,
       id: string,
+      oldFieldWithoutDescription?: string | null,
       percent: number,
       qualifications?: Array<string | null> | null
     } | null,
@@ -750,6 +804,7 @@ export type OrderSubscriptionResult = {
       availableProduce: Array<{
         __typename: 'Fruit',
         isSeedless?: boolean | null,
+        oldFieldWithDescription?: string | null,
         ripenessIndicators?: Array<string | null> | null,
         id: string,
         name: string,
@@ -759,6 +814,7 @@ export type OrderSubscriptionResult = {
       } | {
         __typename: 'Vegetable',
         isPickled?: boolean | null,
+        oldName?: string | null,
         vegetableFamily?: string | null,
         id: string,
         name: string,
@@ -776,6 +832,7 @@ export type VegetableAllFieldsFragment = {
   isPickled?: boolean | null,
   name: string,
   nutrients?: Array<string | null> | null,
+  oldName?: string | null,
   price: number,
   quantity: number,
   vegetableFamily?: string | null
@@ -809,6 +866,7 @@ export const DiscountAllFields = gql`
   code
   description
   id
+  oldFieldWithoutDescription
   percent
   qualifications
   __typename
@@ -820,6 +878,7 @@ export const FruitAllFields = gql`
   isSeedless
   name
   nutrients
+  oldFieldWithDescription
   price
   quantity
   ripenessIndicators
@@ -839,10 +898,12 @@ export const OrderItemAllFields = gql`
     __typename
     ... on Fruit {
       isSeedless
+      oldFieldWithDescription
       ripenessIndicators
     }
     ... on Vegetable {
       isPickled
+      oldName
       vegetableFamily
     }
   }
@@ -861,10 +922,12 @@ export const StallAllFields = gql`
     __typename
     ... on Fruit {
       isSeedless
+      oldFieldWithDescription
       ripenessIndicators
     }
     ... on Vegetable {
       isPickled
+      oldName
       vegetableFamily
     }
   }
@@ -891,6 +954,7 @@ export const OrderAllFields = gql`
       code
       description
       id
+      oldFieldWithoutDescription
       percent
       qualifications
     }
@@ -909,6 +973,7 @@ export const VegetableAllFields = gql`
   isPickled
   name
   nutrients
+  oldName
   price
   quantity
   vegetableFamily
@@ -975,10 +1040,12 @@ export const Produce = gql`
     __typename
     ... on Fruit {
       isSeedless
+      oldFieldWithDescription
       ripenessIndicators
     }
     ... on Vegetable {
       isPickled
+      oldName
       vegetableFamily
     }
   }

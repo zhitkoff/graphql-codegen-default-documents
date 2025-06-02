@@ -8,8 +8,11 @@ interface Produce {
 
 type Fruit implements Produce {
   id: ID!
+  "one line description"
+  oldFieldWithDescription: String  @deprecated
   name: String!
   quantity: Int!
+  "Price per unit"
   price: Int!
   nutrients: [String]
   isSeedless: Boolean
@@ -18,6 +21,11 @@ type Fruit implements Produce {
 
 type Vegetable implements Produce {
   id: ID!
+  """
+  multiline
+  description
+  """
+  oldName: String @deprecated(reason: "Field is no longer supported")
   name: String!
   quantity: Int!
   price: Int!
@@ -30,6 +38,7 @@ union Offer = Discount | Coupon
 
 type Discount {
   id: ID!
+  oldFieldWithoutDescription: String  @deprecated
   code: String!
   percent: Float!
   description: String

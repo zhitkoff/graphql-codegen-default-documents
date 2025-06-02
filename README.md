@@ -72,6 +72,3 @@ and run it with `graphql-codegen --config codegen-typescript.ts`.
 
 Inspired by <https://github.com/argano/graphql-codegen-documents>
 
-## TODO
-
-- Test cases

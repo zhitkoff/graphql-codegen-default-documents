@@ -1,14 +1,8 @@
-import {
-  indent,
-  transformComment,
-  getBaseTypeNode,
-  buildScalars,
-  ParsedScalarsMap,
-  indentMultiline,
-} from '@graphql-codegen/visitor-plugin-common';
+import { indent, getBaseTypeNode, buildScalars, ParsedScalarsMap, indentMultiline } from '@graphql-codegen/visitor-plugin-common';
 import * as autoBind from 'auto-bind';
 import {
   ASTNode,
+  ConstDirectiveNode,
   DirectiveNode,
   EnumValueDefinitionNode,
   FieldDefinitionNode,
@@ -22,9 +16,17 @@ import {
   isScalarType,
   Kind,
   ObjectTypeDefinitionNode,
+  StringValueNode,
   UnionTypeDefinitionNode,
 } from 'graphql';
-import { DefaultDocsPluginConfig, DEFAULT_DOCS_TO_GENERATE, DEFAULT_FRAGMENT_MINIMUM_FIELDS, DEFAULT_SKIP_TYPENAME } from './config';
+import {
+  DefaultDocsPluginConfig,
+  DEFAULT_DOCS_TO_GENERATE,
+  DEFAULT_FRAGMENT_MINIMUM_FIELDS,
+  DEFAULT_SKIP_TYPENAME,
+  DEFAULT_COMMENTS_FROM_DESCRIPTIONS,
+  DEFAULT_DEPRECATED_DIRECTIVE_IN_COMMENTS,
+} from './config';
 
 type FieldParentNode = ObjectTypeDefinitionNode | InterfaceTypeDefinitionNode | UnionTypeDefinitionNode;
 
@@ -44,6 +46,8 @@ export class DefaultDocsVisitor<
   readonly docsToGenerate: string[];
   readonly fragmentMinimumFields: number;
   readonly skipTypename: boolean;
+  readonly commentsFromDescriptions: boolean;
+  readonly deprecatedDirectiveInComments: boolean;
   schema: GraphQLSchema;
   typeMap: { [name: string]: GraphQLType };
   Query: GraphQLObjectType;
@@ -59,6 +63,8 @@ export class DefaultDocsVisitor<
     this.docsToGenerate = rawConfig.docsToGenerate || DEFAULT_DOCS_TO_GENERATE;
     this.fragmentMinimumFields = rawConfig.fragmentMinimumFields || DEFAULT_FRAGMENT_MINIMUM_FIELDS;
     this.skipTypename = rawConfig.skipTypename || DEFAULT_SKIP_TYPENAME;
+    this.commentsFromDescriptions = rawConfig.commentsFromDescriptions || DEFAULT_COMMENTS_FROM_DESCRIPTIONS;
+    this.deprecatedDirectiveInComments = rawConfig.deprecatedDirectiveInComments || DEFAULT_DEPRECATED_DIRECTIVE_IN_COMMENTS;
     this.schema = schema;
     this.typeMap = schema.getTypeMap();
     this.Query = schema.getQueryType();
@@ -353,25 +359,21 @@ export class DefaultDocsVisitor<
   }
 
   private getNodeComment(node: FieldDefinitionNode | EnumValueDefinitionNode | InputValueDefinitionNode): string {
-    let commentText: string = node.description as any;
-    const deprecationDirective = node.directives.find((v: any) => v.name === 'deprecated');
-    if (deprecationDirective) {
-      const deprecationReason = this.getDeprecationReason(deprecationDirective);
-      commentText = `${commentText ? `${commentText}\n` : ''}@deprecated ${deprecationReason}`;
-    }
-    const comment = transformComment(commentText, 1);
+    const descriptionCommentText = this.commentsFromDescriptions ? this.transformToComment(node.description, 1) : null;
+    const deprecationDirective = node.directives.find((v) => v.name.value === 'deprecated');
+    const deprecationCommentText =
+      deprecationDirective && this.deprecatedDirectiveInComments
+        ? this.transformToComment('@deprecated ' + this.getDeprecationReason(deprecationDirective), 1)
+        : null;
+    const comment = `${descriptionCommentText ? `${descriptionCommentText}\n` : ''}${
+      deprecationCommentText ? `${deprecationCommentText}\n` : ''
+    }`;
     return comment;
   }
 
-  private getDeprecationReason(directive: DirectiveNode): string | void {
-    if ((directive.name as any) === 'deprecated') {
-      const hasArguments = directive.arguments.length > 0;
-      let reason = 'Field no longer supported';
-      if (hasArguments) {
-        reason = directive.arguments[0].value as any;
-      }
-      return reason;
-    }
+  private getDeprecationReason(directive: ConstDirectiveNode | DirectiveNode): string {
+    const hasArguments = directive.arguments.length > 0;
+    return hasArguments ? (directive.arguments.find((a) => a.name.value === 'reason').value as StringValueNode).value : '';
   }
 
   private getCamelCase(str: string): string {
@@ -427,5 +429,26 @@ export class DefaultDocsVisitor<
     }
 
     return undefined;
+  }
+
+  private transformToComment(text: string | StringValueNode, indentLevel = 0): string {
+    if (!text || text === '') {
+      return null;
+    }
+
+    if (this.isStringValueNode(text)) {
+      text = text.value;
+    }
+
+    const lines = text.split('\n').map((line) => `# ${line}`);
+    return this.stripTrailingSpaces(lines.map((line) => indent(line, indentLevel)).join('\n'));
+  }
+
+  private isStringValueNode(node: any): node is StringValueNode {
+    return node && typeof node === 'object' && node.kind === Kind.STRING;
+  }
+
+  private stripTrailingSpaces(str: string): string {
+    return str.replace(/ +\n/g, '\n');
   }
 }

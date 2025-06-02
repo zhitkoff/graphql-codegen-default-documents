@@ -16,8 +16,11 @@ describe('Process Schema', () => {
 
     type Fruit implements Produce {
       id: ID!
+      "one line description"
+      oldFieldWithDescription: String  @deprecated
       name: String!
       quantity: Int!
+      "Price per unit"
       price: Int!
       nutrients: [String]
       isSeedless: Boolean
@@ -26,6 +29,11 @@ describe('Process Schema', () => {
 
     type Vegetable implements Produce {
       id: ID!
+      """
+      multiline
+      description
+      """
+      oldName: String @deprecated(reason: "Field is no longer supported")
       name: String!
       quantity: Int!
       price: Int!
@@ -38,6 +46,7 @@ describe('Process Schema', () => {
 
     type Discount {
       id: ID!
+      oldFieldWithoutDescription: String  @deprecated
       code: String!
       percent: Float!
       description: String
@@ -1353,6 +1362,421 @@ query Produce {
       ripenessIndicators
     }
     ... on Vegetable {
+      vegetableFamily
+      isPickled
+    }
+  }
+}
+
+query Fruits {
+  fruits {
+    ...FruitAllFields
+  }
+}
+
+query Vegetables {
+  vegetables {
+    ...VegetableAllFields
+  }
+}
+
+query Discounts {
+  discounts {
+    ...DiscountAllFields
+  }
+}
+
+query Coupons {
+  coupons {
+    ...CouponAllFields
+  }
+}
+
+mutation CreateOrder($vendorId: ID!, $items: [OrderItemInput!]!) {
+  createOrder(vendorId: $vendorId, items: $items) {
+    ...OrderAllFields
+  }
+}
+
+mutation UpdateOrder($id: ID!, $items: [OrderItemInput!]!) {
+  updateOrder(id: $id, items: $items) {
+    ...OrderAllFields
+  }
+}
+
+mutation DeleteOrder($id: ID!) {
+  deleteOrder(id: $id) {
+    ...OrderAllFields
+  }
+}
+
+subscription Order {
+  order {
+    ...OrderAllFields
+  }
+}
+"
+`);
+  });
+  it('should add comments from descriptions, but do not include @deprecated directive', async () => {
+    const config: DefaultDocsPluginConfig = {
+      docsToGenerate: ['fragment', 'query', 'mutation', 'subscription'],
+      fragmentMinimumFields: 3,
+      skipTypename: true,
+      commentsFromDescriptions: true,
+    };
+    const { content } = await plugin(dummyUserTestSchema, [], config, { outputFile: '' });
+    expect(content).toMatchInlineSnapshot(`
+"fragment FruitAllFields on Fruit {
+  id
+  # one line description
+  oldFieldWithDescription
+  name
+  quantity
+  # Price per unit
+  price
+  nutrients
+  isSeedless
+  ripenessIndicators
+}
+
+fragment VegetableAllFields on Vegetable {
+  id
+  # multiline
+  # description
+  oldName
+  name
+  quantity
+  price
+  nutrients
+  vegetableFamily
+  isPickled
+}
+
+fragment DiscountAllFields on Discount {
+  id
+  oldFieldWithoutDescription
+  code
+  percent
+  description
+  qualifications
+}
+
+fragment CouponAllFields on Coupon {
+  id
+  code
+  description
+  amount
+}
+
+fragment OrderAllFields on Order {
+  id
+  vendor {
+    ...StallAllFields
+  }
+  items {
+    ...OrderItemAllFields
+  }
+  orderOffer {
+    ... on Discount {
+      id
+      oldFieldWithoutDescription
+      code
+      percent
+      description
+      qualifications
+    }
+    ... on Coupon {
+      id
+      code
+      description
+      amount
+    }
+  }
+}
+
+fragment StallAllFields on Stall {
+  id
+  name
+  stallNumber
+  availableProduce {
+    id
+    name
+    quantity
+    price
+    nutrients
+    ... on Fruit {
+      oldFieldWithDescription
+      isSeedless
+      ripenessIndicators
+    }
+    ... on Vegetable {
+      oldName
+      vegetableFamily
+      isPickled
+    }
+  }
+}
+
+fragment OrderItemAllFields on OrderItem {
+  id
+  quantity
+  price
+  produce {
+    id
+    name
+    quantity
+    price
+    nutrients
+    ... on Fruit {
+      oldFieldWithDescription
+      isSeedless
+      ripenessIndicators
+    }
+    ... on Vegetable {
+      oldName
+      vegetableFamily
+      isPickled
+    }
+  }
+}
+
+query Stalls {
+  stalls {
+    ...StallAllFields
+  }
+}
+
+query Orders {
+  orders {
+    ...OrderAllFields
+  }
+}
+
+query Produce {
+  produce {
+    id
+    name
+    quantity
+    price
+    nutrients
+    ... on Fruit {
+      oldFieldWithDescription
+      isSeedless
+      ripenessIndicators
+    }
+    ... on Vegetable {
+      oldName
+      vegetableFamily
+      isPickled
+    }
+  }
+}
+
+query Fruits {
+  fruits {
+    ...FruitAllFields
+  }
+}
+
+query Vegetables {
+  vegetables {
+    ...VegetableAllFields
+  }
+}
+
+query Discounts {
+  discounts {
+    ...DiscountAllFields
+  }
+}
+
+query Coupons {
+  coupons {
+    ...CouponAllFields
+  }
+}
+
+mutation CreateOrder($vendorId: ID!, $items: [OrderItemInput!]!) {
+  createOrder(vendorId: $vendorId, items: $items) {
+    ...OrderAllFields
+  }
+}
+
+mutation UpdateOrder($id: ID!, $items: [OrderItemInput!]!) {
+  updateOrder(id: $id, items: $items) {
+    ...OrderAllFields
+  }
+}
+
+mutation DeleteOrder($id: ID!) {
+  deleteOrder(id: $id) {
+    ...OrderAllFields
+  }
+}
+
+subscription Order {
+  order {
+    ...OrderAllFields
+  }
+}
+"
+`);
+  });
+
+  it('should add comments from descriptions and include @deprecated directive', async () => {
+    const config: DefaultDocsPluginConfig = {
+      docsToGenerate: ['fragment', 'query', 'mutation', 'subscription'],
+      fragmentMinimumFields: 3,
+      skipTypename: true,
+      commentsFromDescriptions: true,
+      deprecatedDirectiveInComments: true,
+    };
+    const { content } = await plugin(dummyUserTestSchema, [], config, { outputFile: '' });
+    expect(content).toMatchInlineSnapshot(`
+"fragment FruitAllFields on Fruit {
+  id
+  # one line description
+  # @deprecated 
+  oldFieldWithDescription
+  name
+  quantity
+  # Price per unit
+  price
+  nutrients
+  isSeedless
+  ripenessIndicators
+}
+
+fragment VegetableAllFields on Vegetable {
+  id
+  # multiline
+  # description
+  # @deprecated Field is no longer supported
+  oldName
+  name
+  quantity
+  price
+  nutrients
+  vegetableFamily
+  isPickled
+}
+
+fragment DiscountAllFields on Discount {
+  id
+  # @deprecated 
+  oldFieldWithoutDescription
+  code
+  percent
+  description
+  qualifications
+}
+
+fragment CouponAllFields on Coupon {
+  id
+  code
+  description
+  amount
+}
+
+fragment OrderAllFields on Order {
+  id
+  vendor {
+    ...StallAllFields
+  }
+  items {
+    ...OrderItemAllFields
+  }
+  orderOffer {
+    ... on Discount {
+      id
+      oldFieldWithoutDescription
+      code
+      percent
+      description
+      qualifications
+    }
+    ... on Coupon {
+      id
+      code
+      description
+      amount
+    }
+  }
+}
+
+fragment StallAllFields on Stall {
+  id
+  name
+  stallNumber
+  availableProduce {
+    id
+    name
+    quantity
+    price
+    nutrients
+    ... on Fruit {
+      oldFieldWithDescription
+      isSeedless
+      ripenessIndicators
+    }
+    ... on Vegetable {
+      oldName
+      vegetableFamily
+      isPickled
+    }
+  }
+}
+
+fragment OrderItemAllFields on OrderItem {
+  id
+  quantity
+  price
+  produce {
+    id
+    name
+    quantity
+    price
+    nutrients
+    ... on Fruit {
+      oldFieldWithDescription
+      isSeedless
+      ripenessIndicators
+    }
+    ... on Vegetable {
+      oldName
+      vegetableFamily
+      isPickled
+    }
+  }
+}
+
+query Stalls {
+  stalls {
+    ...StallAllFields
+  }
+}
+
+query Orders {
+  orders {
+    ...OrderAllFields
+  }
+}
+
+query Produce {
+  produce {
+    id
+    name
+    quantity
+    price
+    nutrients
+    ... on Fruit {
+      oldFieldWithDescription
+      isSeedless
+      ripenessIndicators
+    }
+    ... on Vegetable {
+      oldName
       vegetableFamily
       isPickled
     }
