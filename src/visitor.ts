@@ -1,5 +1,5 @@
 import { indent, getBaseTypeNode, buildScalars, ParsedScalarsMap, indentMultiline } from '@graphql-codegen/visitor-plugin-common';
-import * as autoBind from 'auto-bind';
+import autoBind from 'auto-bind';
 import {
   ASTNode,
   ConstDirectiveNode,

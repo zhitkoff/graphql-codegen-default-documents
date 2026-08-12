@@ -1,5 +1,5 @@
 import { LoadedFragment } from '@graphql-codegen/visitor-plugin-common';
-import * as autoBind from 'auto-bind';
+import autoBind from 'auto-bind';
 import { FragmentDefinitionNode, GraphQLSchema, OperationDefinitionNode } from 'graphql';
 import { DefaultDocsPluginConfig } from './config';
 
