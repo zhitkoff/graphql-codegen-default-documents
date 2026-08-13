@@ -7,6 +7,9 @@ module.exports = {
         diagnostics: false
       }]
     },
+    moduleNameMapper: {
+      '^auto-bind$': '<rootDir>/tests/auto-bind.cjs',
+    },
     reporters: [
       'default',
       [
